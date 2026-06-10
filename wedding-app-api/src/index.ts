@@ -16,7 +16,6 @@ import { createPublicRoutes } from "./modules/public"
 import { createPublicService } from "./modules/public/service"
 import { createWeddingsRoutes } from "./modules/weddings"
 import { createWeddingsService } from "./modules/weddings/service"
-import { logger } from "@rasla/logify";
 
 async function expireGiftLocks() {
   const giftsRepo = createGiftsRepository(db)
@@ -35,7 +34,6 @@ async function expireGiftLocks() {
 }
 
 const app = new Elysia()
-  .use(logger())
   .use(
     cors({
       origin: process.env.ALLOWED_ORIGINS?.split(",") ?? ["http://localhost:5173"],

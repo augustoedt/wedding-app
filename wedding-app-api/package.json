@@ -17,7 +17,7 @@
   "dependencies": {
     "@elysia/cron": "^1.4.2",
     "@elysiajs/cors": "latest",
-    "@rasla/logify": "^5.2.2",
+    "@sinclair/typebox": "^0.34.49",
     "better-auth": "latest",
     "drizzle-orm": "latest",
     "elysia": "latest",
