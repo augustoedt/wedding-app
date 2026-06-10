@@ -27,9 +27,18 @@ async function prompt(question: string, hidden = false): Promise<string> {
 }
 
 async function main() {
-  const email = getArg("email") ?? ((await prompt("Email [local@demo.com]: ")) || "local@demo.com")
-  const name = getArg("name") ?? ((await prompt("Nome [Local Demo]: ")) || "Local Demo")
-  const password = getArg("password") ?? ((await prompt("Senha [Password123!]: ", true)) || "Password123!")
+  const email =
+    getArg("email") ??
+    process.env.ADMIN_EMAIL ??
+    ((await prompt("Email [local@demo.com]: ")) || "local@demo.com")
+  const name =
+    getArg("name") ??
+    process.env.ADMIN_NAME ??
+    ((await prompt("Nome [Local Demo]: ")) || "Local Demo")
+  const password =
+    getArg("password") ??
+    process.env.ADMIN_PASSWORD ??
+    ((await prompt("Senha [Password123!]: ", true)) || "Password123!")
 
   if (!email || !name || !password) {
     console.error("email, nome e senha são obrigatórios")
@@ -38,8 +47,8 @@ async function main() {
 
   const existing = await db.select().from(user).where(eq(user.email, email)).limit(1)
   if (existing.length > 0) {
-    console.error(`Usuário com email ${email} já existe`)
-    process.exit(1)
+    console.log(`Admin ${email} já existe, nada a fazer`)
+    process.exit(0)
   }
 
   const result = await auth.api.signUpEmail({

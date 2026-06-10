@@ -53,13 +53,13 @@
         "@elysiajs/cors": "latest",
         "@sinclair/typebox": "^0.34.49",
         "better-auth": "latest",
+        "drizzle-kit": "latest",
         "drizzle-orm": "latest",
         "elysia": "latest",
         "postgres": "latest",
       },
       "devDependencies": {
         "bun-types": "latest",
-        "drizzle-kit": "latest",
       },
     },
     "wedding-app-front": {
