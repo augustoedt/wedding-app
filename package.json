@@ -1,0 +1,14 @@
+{
+  "private": true,
+  "workspaces": [
+    "wedding-app-front",
+    "wedding-app-adm",
+    "wedding-app-api"
+  ],
+  "scripts": {
+    "dev": "concurrently \"cd wedding-app-api && bun run dev\" \"cd wedding-app-adm && bun run dev\" \"cd wedding-app-front && bun run dev\""
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.3"
+  }
+}
