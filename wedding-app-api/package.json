@@ -1,0 +1,31 @@
+{
+  "name": "wedding-app-api",
+  "version": "1.0.50",
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "start": "bun run src/index.ts",
+    "test": "bun run test:unit",
+    "test:unit": "bun test test/routes.test.ts test/auth.admin.test.ts",
+    "test:integration": "bun test test/db.integration.test.ts",
+    "test:all": "bun run test:unit && bun run test:integration",
+    "db:auth": "bunx better-auth generate",
+    "db:generate": "bunx drizzle-kit generate",
+    "db:migrate": "bunx drizzle-kit migrate",
+    "db:studio": "bunx drizzle-kit studio",
+    "create-admin": "bun run scripts/create-admin.ts"
+  },
+  "dependencies": {
+    "@elysia/cron": "^1.4.2",
+    "@elysiajs/cors": "latest",
+    "@rasla/logify": "^5.2.2",
+    "better-auth": "latest",
+    "drizzle-orm": "latest",
+    "elysia": "latest",
+    "postgres": "latest"
+  },
+  "devDependencies": {
+    "bun-types": "latest",
+    "drizzle-kit": "latest"
+  },
+  "module": "src/index.js"
+}
