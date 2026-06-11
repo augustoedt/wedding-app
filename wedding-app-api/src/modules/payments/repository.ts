@@ -33,15 +33,6 @@ export function createPaymentsRepository(database: Database) {
       return rows[0] ?? null
     },
 
-    async findByMercadoPagoId(mercadoPagoId: string) {
-      const rows = await database
-        .select()
-        .from(giftPayments)
-        .where(eq(giftPayments.mercadoPagoId, mercadoPagoId))
-        .limit(1)
-      return rows[0] ?? null
-    },
-
     async create(data: {
       giftId: string
       weddingId: string
@@ -49,20 +40,15 @@ export function createPaymentsRepository(database: Database) {
       buyerEmail: string
       amount: number
       status?: string
-      mercadoPagoPreferenceId?: string
     }) {
       const rows = await database.insert(giftPayments).values(data).returning()
       return rows[0]!
     },
 
-    async updateStatus(
-      id: string,
-      status: string,
-      mercadoPagoId?: string
-    ) {
+    async updateStatus(id: string, status: string) {
       const rows = await database
         .update(giftPayments)
-        .set({ status, mercadoPagoId, updatedAt: new Date() })
+        .set({ status, updatedAt: new Date() })
         .where(eq(giftPayments.id, id))
         .returning()
       return rows[0] ?? null

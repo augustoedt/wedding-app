@@ -16,8 +16,6 @@ export const giftPayments = pgTable("gift_payments", {
   buyerEmail: text("buyer_email").notNull(),
   amount: integer("amount").notNull(),
   status: text("status").notNull().default("pending"),
-  mercadoPagoId: text("mercado_pago_id"),
-  mercadoPagoPreferenceId: text("mercado_pago_preference_id"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 })

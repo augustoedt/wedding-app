@@ -190,7 +190,7 @@ Se o admin não confirmar em até 24h:
 - `Wedding`: `{ id, userId, title, slug, siteUrl, inviteMessage, date, description, coverImage, isPublished, createdAt, updatedAt }`
 - `Guest`: `{ id, weddingId, name, email, phone, rsvp, plusOne: number, inviteSent: boolean, rsvpToken, createdAt, updatedAt }`
 - `Gift`: `{ id, weddingId, name, description, price, imageUrl, paymentType, paymentValue, isActive, lockedAt, createdAt, updatedAt }`
-- `GiftPayment`: `{ id, giftId, weddingId, buyerName, buyerEmail, amount, status, mercadoPagoId, mercadoPagoPreferenceId, createdAt, updatedAt }`
+- `GiftPayment`: `{ id, giftId, weddingId, buyerName, buyerEmail, amount, status, createdAt, updatedAt }`
 
 ## Pagamento nos presentes
 
