@@ -28,11 +28,18 @@ function forwardSetCookies(res: Response) {
 
 export async function signInWithEmail(email: string, password: string) {
 	const { url } = getRequestEvent();
-	const res = await fetch(`${API_URL}/api/auth/sign-in/email`, {
-		method: 'POST',
-		headers: { 'content-type': 'application/json', origin: url.origin },
-		body: JSON.stringify({ email, password })
-	});
+
+	let res: Response;
+	try {
+		res = await fetch(`${API_URL}/api/auth/sign-in/email`, {
+			method: 'POST',
+			headers: { 'content-type': 'application/json', origin: url.origin },
+			body: JSON.stringify({ email, password })
+		});
+	} catch (err) {
+		console.error('[auth] sign-in: falha ao conectar na API', err);
+		return { success: false as const, error: 'Não foi possível conectar ao servidor. Tente novamente.' };
+	}
 
 	if (!res.ok) {
 		const data = await res.json().catch(() => null);
@@ -45,9 +52,13 @@ export async function signInWithEmail(email: string, password: string) {
 
 export async function signOut() {
 	const { request, url } = getRequestEvent();
-	const res = await fetch(`${API_URL}/api/auth/sign-out`, {
-		method: 'POST',
-		headers: { cookie: request.headers.get('cookie') ?? '', origin: url.origin }
-	});
-	forwardSetCookies(res);
+	try {
+		const res = await fetch(`${API_URL}/api/auth/sign-out`, {
+			method: 'POST',
+			headers: { cookie: request.headers.get('cookie') ?? '', origin: url.origin }
+		});
+		forwardSetCookies(res);
+	} catch (err) {
+		console.error('[auth] sign-out: falha ao conectar na API', err);
+	}
 }
