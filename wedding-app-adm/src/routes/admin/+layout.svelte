@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { authClient } from '$lib/auth-client';
+	import { signOut as endSession } from '$lib/api/auth.remote';
 
 	let { data, children } = $props();
 
@@ -14,7 +14,7 @@
 	];
 
 	async function signOut() {
-		await authClient.signOut();
+		await endSession();
 		goto('/login');
 	}
 </script>

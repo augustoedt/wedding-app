@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { authClient } from '$lib/auth-client';
+	import { signIn } from '$lib/api/auth.remote';
 
 	let email = $state('');
 	let password = $state('');
@@ -12,10 +12,10 @@
 		loading = true;
 		errorMsg = '';
 
-		const result = await authClient.signIn.email({ email, password });
+		const result = await signIn({ email, password });
 
-		if (result.error) {
-			errorMsg = result.error.message ?? 'Credenciais inválidas';
+		if (!result.success) {
+			errorMsg = result.error;
 			loading = false;
 		} else {
 			goto('/admin');
