@@ -14,7 +14,7 @@
 	<meta name="description" content={wedding.description ?? wedding.title} />
 </svelte:head>
 
-<WeddingLayout {wedding} slug={PUBLIC_WEDDING_SLUG}>
+<WeddingLayout {wedding}>
 	<main class="flex-1">
 		<Hero {wedding} />
 		{#if wedding.date}

@@ -5,11 +5,10 @@
 
 	let { data, children } = $props();
 
-	const slug = $derived(data.slug);
 	const wedding = await fetchWedding(untrack(() => data.slug));
 </script>
 
-<WeddingLayout {wedding} {slug} dark>
+<WeddingLayout {wedding} dark>
 	<main class="flex-1 pt-20">
 		{@render children()}
 	</main>

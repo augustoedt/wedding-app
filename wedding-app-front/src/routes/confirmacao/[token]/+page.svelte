@@ -39,7 +39,7 @@
 	<title>Confirmação de Presença</title>
 </svelte:head>
 
-<WeddingLayout {wedding} slug={PUBLIC_WEDDING_SLUG} dark>
+<WeddingLayout {wedding} dark>
 	<main class="flex flex-1 flex-col items-center justify-center bg-stone-50 px-6 py-20">
 		<div class="mb-8 flex flex-col items-center gap-3">
 			<svg

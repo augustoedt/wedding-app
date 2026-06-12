@@ -4,7 +4,7 @@
 	import { resolve } from '$app/paths';
 	import { getToken } from '$lib/rsvp-store';
 
-	let { wedding, slug, dark = false }: { wedding: Wedding; slug: string; dark?: boolean } = $props();
+	let { wedding, dark = false }: { wedding: Wedding; dark?: boolean } = $props();
 
 	let rsvpToken = $state<string | null>(null);
 	onMount(() => {
@@ -17,13 +17,13 @@
 
 	let isScrolled = $derived(dark || scrollY > 60);
 
-	const navItems = $derived([
-		{ label: 'Página Inicial', href: `/${slug}` },
-		{ label: 'Cerimônia & Festa', href: `/${slug}/cerimonia` },
-		{ label: 'Dicas de Hospedagem', href: `/${slug}/hospedagem` },
-		{ label: 'Dress Code', href: `/${slug}/dresscode` },
-		{ label: 'Mensagens', href: `/${slug}/mensagens` }
-	]);
+	const navItems = [
+		{ label: 'Página Inicial', href: '/' },
+		{ label: 'Cerimônia & Festa', href: '/cerimonia' },
+		{ label: 'Dicas de Hospedagem', href: '/hospedagem' },
+		{ label: 'Dress Code', href: '/dresscode' },
+		{ label: 'Mensagens', href: '/mensagens' }
+	];
 
 	function coupleInitials(title: string) {
 		const parts = title.split(/[\s&eE]+/).filter(Boolean);
@@ -43,7 +43,7 @@
 	<div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
 		<!-- Couple initials -->
 		<a
-			href={resolve(`/${slug}`)}
+			href={resolve('/')}
 			class="font-serif text-2xl font-light tracking-widest transition-colors"
 			class:text-white={!isScrolled}
 			class:text-stone-800={isScrolled}
@@ -84,7 +84,7 @@
 						{#each navItems as item (item.href)}
 							<li>
 								<a
-									href={resolve(`/${slug}`)}
+									href={resolve('/')}
 									class="block px-5 py-2.5 text-sm text-stone-700 hover:bg-stone-50"
 									onclick={() => (menuOpen = false)}
 								>
@@ -97,7 +97,7 @@
 			</div>
 
 			<a
-				href={resolve(`/presentes/${slug}`)}
+				href={resolve('/presentes')}
 				class="text-sm font-medium tracking-widest uppercase transition-colors"
 				class:text-white={!isScrolled}
 				class:text-stone-800={isScrolled}
@@ -136,7 +136,7 @@
 				{#each navItems as item (item.href)}
 					<li>
 						<a
-							href={resolve(`/${slug}`)}
+							href={resolve('/')}
 							class="block border-b border-stone-100 py-3 text-sm text-stone-700"
 							onclick={() => (mobileOpen = false)}
 						>
@@ -146,7 +146,7 @@
 				{/each}
 				<li>
 					<a
-						href={resolve(`/presentes/${slug}`)}
+						href={resolve('/presentes')}
 						class="block border-b border-stone-100 py-3 text-sm text-stone-700"
 						onclick={() => (mobileOpen = false)}
 					>

@@ -6,19 +6,17 @@
 
 	let {
 		wedding,
-		slug,
 		dark = false,
 		children
 	}: {
 		wedding: Wedding;
-		slug: string;
 		dark?: boolean;
 		children: Snippet;
 	} = $props();
 </script>
 
 <div class="flex min-h-screen flex-col font-sans">
-	<Header {wedding} {slug} {dark} />
+	<Header {wedding} {dark} />
 	{@render children()}
 	<Footer title={wedding.title} />
 </div>
