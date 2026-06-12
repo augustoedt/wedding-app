@@ -101,6 +101,14 @@ Todas as rotas abaixo usam o prefixo `/admin` e exigem sessão autenticada via `
 		- `409` — pagamento não está no status `pending_confirmation`
 	- efeito colateral: marca o presente como comprado definitivamente (`isActive = false, lockedAt = null`)
 
+### Imagens
+
+- `POST /admin/images`
+	- body aceito (`multipart/form-data`): `{ file: File (image/jpeg | image/png | image/webp | image/gif, máx 8MB); description?: string }`
+	- retorno `201`: `Image`
+	- erro comum: `404 { message: "No wedding found" }`
+	- efeito: faz upload do arquivo para o bucket Backblaze B2, em `wedding/{slug-do-casamento}/{uuid}.{ext}`, e cria o registro `Image` com a URL pública resultante
+
 ---
 
 ## Site de convidados — rotas utilizadas
@@ -191,6 +199,7 @@ Se o admin não confirmar em até 24h:
 - `Guest`: `{ id, weddingId, name, email, phone, rsvp, plusOne: number, inviteSent: boolean, rsvpToken, createdAt, updatedAt }`
 - `Gift`: `{ id, weddingId, name, description, price, imageUrl, paymentType, paymentValue, isActive, lockedAt, createdAt, updatedAt }`
 - `GiftPayment`: `{ id, giftId, weddingId, buyerName, buyerEmail, amount, status, createdAt, updatedAt }`
+- `Image`: `{ id, weddingId, url, description, createdAt }`
 
 ## Pagamento nos presentes
 

@@ -16,6 +16,7 @@
     "deploy": "bun run db:migrate && bun run create-admin && bun run start"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3",
     "@elysia/cron": "^1.4.2",
     "@elysiajs/cors": "latest",
     "@sinclair/typebox": "^0.34.49",

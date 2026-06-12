@@ -45,6 +45,7 @@ export async function setupTestDatabase() {
 export async function resetTestDatabase() {
   await sql.unsafe(`
     TRUNCATE TABLE
+      "images",
       "gifts",
       "guests",
       "weddings",

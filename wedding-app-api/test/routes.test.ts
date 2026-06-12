@@ -5,6 +5,8 @@ import { createGiftsRoutes } from "../src/modules/gifts"
 import { createGiftsService } from "../src/modules/gifts/service"
 import { createGuestsRoutes } from "../src/modules/guests"
 import { createGuestsService } from "../src/modules/guests/service"
+import { createImagesRoutes } from "../src/modules/images"
+import { createImagesService } from "../src/modules/images/service"
 import { createPublicRoutes } from "../src/modules/public"
 import { createPublicService } from "../src/modules/public/service"
 import { createWeddingsRoutes } from "../src/modules/weddings"
@@ -291,5 +293,57 @@ describe("public routes", () => {
 
     expect(response.status).toBe(200)
     expect(await response.json()).toMatchObject({ rsvp: "confirmed" })
+  })
+})
+
+describe("images routes", () => {
+  function uploadForm() {
+    const form = new FormData()
+    form.append("file", new File([new Uint8Array([1, 2, 3])], "photo.png", { type: "image/png" }))
+    form.append("description", "Foto de capa")
+    return form
+  }
+
+  it("returns 404 when current user has no wedding", async () => {
+    const app = new Elysia().use(
+      createImagesRoutes({
+        guard: createAuthenticatedGuard() as unknown as typeof authGuard,
+        service: {
+          upload: async () => ({ error: "no_wedding" as const }),
+        } as unknown as ReturnType<typeof createImagesService>,
+      })
+    )
+
+    const response = await app.handle(
+      new Request("http://localhost/admin/images", { method: "POST", body: uploadForm() })
+    )
+
+    expect(response.status).toBe(404)
+    expect(await response.json()).toEqual({ message: "No wedding found" })
+  })
+
+  it("returns 201 with the uploaded image on success", async () => {
+    const image = {
+      id: "img-1",
+      weddingId: "w-1",
+      url: "https://f005.backblazeb2.com/file/bucket/wedding/slug/img-1.png",
+      description: "Foto de capa",
+      createdAt: new Date().toISOString(),
+    }
+    const app = new Elysia().use(
+      createImagesRoutes({
+        guard: createAuthenticatedGuard() as unknown as typeof authGuard,
+        service: {
+          upload: async () => ({ data: image }),
+        } as unknown as ReturnType<typeof createImagesService>,
+      })
+    )
+
+    const response = await app.handle(
+      new Request("http://localhost/admin/images", { method: "POST", body: uploadForm() })
+    )
+
+    expect(response.status).toBe(201)
+    expect(await response.json()).toEqual(image)
   })
 })
