@@ -13,6 +13,13 @@ export function createImagesService(database: Database) {
   const weddingsRepo = createWeddingsRepository(database)
 
   return {
+    async list(userId: string) {
+      const wedding = await weddingsRepo.findByUserId(userId)
+      if (!wedding) return { error: "no_wedding" as const }
+
+      return { data: await repo.findByWeddingId(wedding.id) }
+    },
+
     async upload(userId: string, file: File, description?: string) {
       const wedding = await weddingsRepo.findByUserId(userId)
       if (!wedding) return { error: "no_wedding" as const }

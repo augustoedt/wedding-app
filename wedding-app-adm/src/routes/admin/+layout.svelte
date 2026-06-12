@@ -10,6 +10,7 @@
 		{ href: '/admin/guests', label: 'Convidados', icon: '👥' },
 		{ href: '/admin/gifts', label: 'Presentes', icon: '🎁' },
 		{ href: '/admin/payments', label: 'Pagamentos', icon: '💳' },
+		{ href: '/admin/media', label: 'Mídia', icon: '🖼️' },
 		{ href: '/admin/settings', label: 'Configurações', icon: '⚙️' }
 	];
 

@@ -298,17 +298,67 @@ describe("public routes", () => {
 
 describe("images routes", () => {
   function uploadForm() {
+    // PNG signature + minimal IHDR chunk, required for file-type content sniffing
+    const pngBytes = new Uint8Array([
+      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, // signature
+      0x00, 0x00, 0x00, 0x0d, // IHDR length = 13
+      0x49, 0x48, 0x44, 0x52, // "IHDR"
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // IHDR data (13 bytes)
+      0, 0, 0, 0, // CRC
+    ])
     const form = new FormData()
-    form.append("file", new File([new Uint8Array([1, 2, 3])], "photo.png", { type: "image/png" }))
+    form.append("file", new File([pngBytes], "photo.png", { type: "image/png" }))
     form.append("description", "Foto de capa")
     return form
   }
+
+  it("returns 404 when listing images for a user with no wedding", async () => {
+    const app = new Elysia().use(
+      createImagesRoutes({
+        guard: createAuthenticatedGuard() as unknown as typeof authGuard,
+        service: {
+          list: async () => ({ error: "no_wedding" as const }),
+          upload: async () => ({ error: "no_wedding" as const }),
+        } as unknown as ReturnType<typeof createImagesService>,
+      })
+    )
+
+    const response = await app.handle(new Request("http://localhost/admin/images"))
+
+    expect(response.status).toBe(404)
+    expect(await response.json()).toEqual({ message: "No wedding found" })
+  })
+
+  it("returns 200 with the list of images", async () => {
+    const image = {
+      id: "img-1",
+      weddingId: "w-1",
+      url: "https://f005.backblazeb2.com/file/bucket/wedding/slug/img-1.png",
+      description: "Foto de capa",
+      createdAt: new Date().toISOString(),
+    }
+    const app = new Elysia().use(
+      createImagesRoutes({
+        guard: createAuthenticatedGuard() as unknown as typeof authGuard,
+        service: {
+          list: async () => ({ data: [image] }),
+          upload: async () => ({ error: "no_wedding" as const }),
+        } as unknown as ReturnType<typeof createImagesService>,
+      })
+    )
+
+    const response = await app.handle(new Request("http://localhost/admin/images"))
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual([image])
+  })
 
   it("returns 404 when current user has no wedding", async () => {
     const app = new Elysia().use(
       createImagesRoutes({
         guard: createAuthenticatedGuard() as unknown as typeof authGuard,
         service: {
+          list: async () => ({ data: [] }),
           upload: async () => ({ error: "no_wedding" as const }),
         } as unknown as ReturnType<typeof createImagesService>,
       })

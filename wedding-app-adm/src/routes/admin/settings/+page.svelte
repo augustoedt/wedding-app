@@ -2,6 +2,7 @@
 	import { untrack } from 'svelte';
 	import { invalidateAll } from '$app/navigation';
 	import { createWedding, updateWedding } from '$lib/api/wedding.remote';
+	import { uploadImage } from '$lib/api/images.remote';
 
 	let { data } = $props();
 	const isNew = $derived(!data.wedding);
@@ -26,6 +27,27 @@
 	let formError = $state('');
 	let saved = $state(false);
 	let copied = $state(false);
+
+	let uploadingCover = $state(false);
+	let coverUploadError = $state('');
+
+	const uploadCoverForm = uploadImage.enhance(async (instance) => {
+		uploadingCover = true;
+		coverUploadError = '';
+		try {
+			await instance.submit();
+			if (instance.result?.url) {
+				form.coverImage = instance.result.url;
+				instance.element.reset();
+			} else {
+				coverUploadError = 'Não foi possível enviar a imagem. Verifique o formato e o tamanho do arquivo.';
+			}
+		} catch (e) {
+			coverUploadError = e instanceof Error ? e.message : 'Erro ao enviar imagem';
+		} finally {
+			uploadingCover = false;
+		}
+	});
 
 	async function submit() {
 		loading = true;
@@ -217,6 +239,25 @@
 					class="input mt-1"
 					placeholder="https://..."
 				/>
+
+				<div class="mt-2 flex items-center gap-2">
+					<span class="text-xs text-slate-400">ou</span>
+					<form {...uploadCoverForm} enctype="multipart/form-data" class="flex items-center gap-2">
+						<input
+							type="file"
+							name="file"
+							accept="image/jpeg,image/png,image/webp,image/gif"
+							class="text-sm text-slate-500"
+						/>
+						<button type="submit" class="btn-ghost" disabled={uploadingCover}>
+							{uploadingCover ? 'Enviando...' : 'Enviar imagem'}
+						</button>
+					</form>
+				</div>
+				{#if coverUploadError}
+					<p class="mt-1 text-sm text-red-600">{coverUploadError}</p>
+				{/if}
+
 				{#if form.coverImage}
 					<img
 						src={form.coverImage}

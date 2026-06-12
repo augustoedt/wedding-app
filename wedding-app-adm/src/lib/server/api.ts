@@ -31,6 +31,19 @@ export async function apiPost<T>(path: string, body: unknown): Promise<T> {
 	return res.json();
 }
 
+export async function apiPostForm<T>(path: string, formData: FormData): Promise<T> {
+	const res = await fetch(`${API_URL}${path}`, {
+		method: 'POST',
+		headers: { cookie: cookieHeader() },
+		body: formData
+	});
+	if (!res.ok) {
+		const b = await res.json().catch(() => ({ message: 'Request failed' }));
+		error(res.status, b.message ?? 'Request failed');
+	}
+	return res.json();
+}
+
 export async function apiPut<T>(path: string, body: unknown): Promise<T> {
 	const res = await fetch(`${API_URL}${path}`, {
 		method: 'PUT',

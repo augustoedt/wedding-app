@@ -103,6 +103,9 @@ Todas as rotas abaixo usam o prefixo `/admin` e exigem sessão autenticada via `
 
 ### Imagens
 
+- `GET /admin/images`
+	- retorno `200`: `Image[]`
+	- erro comum: `404 { message: "No wedding found" }`
 - `POST /admin/images`
 	- body aceito (`multipart/form-data`): `{ file: File (image/jpeg | image/png | image/webp | image/gif, máx 8MB); description?: string }`
 	- retorno `201`: `Image`

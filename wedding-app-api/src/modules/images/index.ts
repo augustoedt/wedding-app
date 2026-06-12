@@ -12,6 +12,12 @@ export function createImagesRoutes({
 }) {
   return new Elysia({ prefix: "/admin" })
     .use(guard)
+    .get("/images", async ({ session, status }) => {
+      const result = await service.list(session!.user.id)
+      if ("error" in result && result.error === "no_wedding")
+        return status(404, { message: "No wedding found" })
+      return (result as { data: unknown }).data
+    })
     .post(
       "/images",
       async ({ session, body, status }) => {
