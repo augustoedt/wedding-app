@@ -40,6 +40,7 @@ export function createGiftsRepository(database: Database) {
         paymentType: string | null
         paymentValue: string | null
         isActive: boolean
+        lockedAt: Date | null
       }>
     ) {
       const rows = await database

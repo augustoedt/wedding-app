@@ -2,7 +2,7 @@ import { beforeAll, afterAll, beforeEach, describe, expect, it } from "bun:test"
 import { Elysia } from "elysia"
 import { eq } from "drizzle-orm"
 import { authGuard } from "../src/lib/auth-guard"
-import { guests, gifts, user, weddings } from "../src/db/schema"
+import { giftPayments, guests, gifts, user, weddings } from "../src/db/schema"
 import { createGiftsRoutes } from "../src/modules/gifts"
 import { createGiftsService } from "../src/modules/gifts/service"
 import { createGuestsRoutes } from "../src/modules/guests"
@@ -81,10 +81,12 @@ async function seedGift({
   id,
   weddingId,
   active = true,
+  lockedAt = null,
 }: {
   id: string
   weddingId: string
   active?: boolean
+  lockedAt?: Date | null
 }) {
   await testDb.insert(gifts).values({
     id,
@@ -96,6 +98,31 @@ async function seedGift({
     paymentType: null,
     paymentValue: null,
     isActive: active,
+    lockedAt,
+    createdAt: now,
+    updatedAt: now,
+  })
+}
+
+async function seedGiftPayment({
+  id,
+  giftId,
+  weddingId,
+  status = "pending_confirmation",
+}: {
+  id: string
+  giftId: string
+  weddingId: string
+  status?: string
+}) {
+  await testDb.insert(giftPayments).values({
+    id,
+    giftId,
+    weddingId,
+    buyerName: "Buyer",
+    buyerEmail: "buyer@example.com",
+    amount: 1000,
+    status,
     createdAt: now,
     updatedAt: now,
   })
@@ -170,6 +197,41 @@ describe("service integration", () => {
 
     expect("data" in result && result.data.paymentType).toBe("pix")
     expect("data" in result && result.data.paymentValue).toBe("contato@email.com")
+  })
+
+  it("gifts service marks a gift as purchased via status update", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-1")
+    await seedWedding({ id: "w-1", userId: "u-1", slug: "slug-1" })
+    await seedGift({ id: "g-1", weddingId: "w-1", active: true })
+
+    const service = createGiftsService(testDb)
+    const result = await service.updateGift("u-1", "g-1", { status: "purchased" })
+
+    expect("data" in result && result.data?.isActive).toBe(false)
+    expect("data" in result && result.data?.lockedAt).toBeNull()
+  })
+
+  it("gifts service unlocks a gift and expires its pending payment", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-1")
+    await seedWedding({ id: "w-1", userId: "u-1", slug: "slug-1" })
+    await seedGift({ id: "g-1", weddingId: "w-1", active: false, lockedAt: now })
+    await seedGiftPayment({ id: "p-1", giftId: "g-1", weddingId: "w-1" })
+
+    const service = createGiftsService(testDb)
+    const result = await service.updateGift("u-1", "g-1", { status: "available" })
+
+    expect("data" in result && result.data?.isActive).toBe(true)
+    expect("data" in result && result.data?.lockedAt).toBeNull()
+
+    const [payment] = await testDb
+      .select()
+      .from(giftPayments)
+      .where(eq(giftPayments.id, "p-1"))
+    expect(payment?.status).toBe("expired")
   })
 })
 

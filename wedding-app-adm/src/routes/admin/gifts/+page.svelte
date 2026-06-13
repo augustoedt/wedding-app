@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getGifts, addGift, updateGift, deleteGift, type Gift } from '$lib/api/gifts.remote';
+	import { getGifts, addGift, updateGift, deleteGift, type Gift, type GiftStatus } from '$lib/api/gifts.remote';
 
 	const gifts = getGifts();
 
@@ -54,8 +54,26 @@
 		gifts.refresh();
 	}
 
-	async function toggleActive(g: Gift) {
-		await updateGift({ id: g.id, isActive: !g.isActive });
+	function giftStatus(g: Gift): GiftStatus {
+		if (!g.isActive && g.lockedAt) return 'locked';
+		if (!g.isActive) return 'purchased';
+		return 'available';
+	}
+
+	const statusLabels: Record<GiftStatus, string> = {
+		available: 'Disponível',
+		locked: 'Travado',
+		purchased: 'Comprado'
+	};
+
+	const statusColors: Record<GiftStatus, string> = {
+		available: 'bg-emerald-100 text-emerald-700',
+		locked: 'bg-yellow-100 text-yellow-700',
+		purchased: 'bg-slate-200 text-slate-600'
+	};
+
+	async function changeStatus(g: Gift, status: GiftStatus) {
+		await updateGift({ id: g.id, status });
 		gifts.refresh();
 	}
 
@@ -151,8 +169,6 @@
 				</thead>
 				<tbody class="divide-y divide-slate-100">
 					{#each gifts.current as g (g.id)}
-						{@const isLocked = !g.isActive && !!g.lockedAt}
-						{@const isBought = !g.isActive && !g.lockedAt}
 						<tr class="hover:bg-slate-50">
 							<td class="px-4 py-3">
 								<div class="flex items-center gap-3">
@@ -180,18 +196,15 @@
 								{/if}
 							</td>
 							<td class="px-4 py-3">
-								{#if isLocked}
-									<span class="rounded-full bg-yellow-100 px-2.5 py-1 text-xs font-medium text-yellow-700">Travado</span>
-								{:else if isBought}
-									<span class="rounded-full bg-slate-200 px-2.5 py-1 text-xs font-medium text-slate-600">Comprado</span>
-								{:else}
-									<button
-										onclick={() => toggleActive(g)}
-										class="rounded-full px-2.5 py-1 text-xs font-medium transition bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-									>
-										Ativo
-									</button>
-								{/if}
+								<select
+									value={giftStatus(g)}
+									onchange={(e) => changeStatus(g, (e.target as HTMLSelectElement).value as GiftStatus)}
+									class="rounded-full px-2 py-1 text-xs font-medium border-0 focus:ring-1 focus:ring-rose-400 cursor-pointer {statusColors[giftStatus(g)]}"
+								>
+									<option value="available">{statusLabels.available}</option>
+									<option value="locked">{statusLabels.locked}</option>
+									<option value="purchased">{statusLabels.purchased}</option>
+								</select>
 							</td>
 							<td class="px-4 py-3 text-right">
 								<button onclick={() => openEdit(g)} class="mr-2 text-slate-400 hover:text-slate-700">Editar</button>

@@ -2,6 +2,8 @@ import * as v from 'valibot';
 import { query, command } from '$app/server';
 import { apiGet, apiPost, apiPut, apiDelete } from '$lib/server/api';
 
+export type GiftStatus = 'available' | 'locked' | 'purchased';
+
 export type Gift = {
 	id: string;
 	weddingId: string;
@@ -42,7 +44,8 @@ export const updateGift = command(
 		imageUrl: v.optional(v.nullable(v.string())),
 		paymentType: v.optional(v.nullable(v.picklist(['url', 'pix']))),
 		paymentValue: v.optional(v.nullable(v.string())),
-		isActive: v.optional(v.boolean())
+		isActive: v.optional(v.boolean()),
+		status: v.optional(v.picklist(['available', 'locked', 'purchased']))
 	}),
 	async ({ id, ...body }) => apiPut<Gift>(`/admin/gifts/${id}`, body)
 );

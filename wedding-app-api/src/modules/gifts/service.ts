@@ -1,9 +1,25 @@
 import type { Database } from "../../db"
+import { createPaymentsRepository } from "../payments/repository"
 import { createWeddingsRepository } from "../weddings/repository"
+import type { giftStatus } from "./model"
 import { createGiftsRepository } from "./repository"
+
+type GiftStatus = (typeof giftStatus)["static"]
+
+function statusToFields(status: GiftStatus) {
+  switch (status) {
+    case "available":
+      return { isActive: true, lockedAt: null }
+    case "locked":
+      return { isActive: false, lockedAt: new Date() }
+    case "purchased":
+      return { isActive: false, lockedAt: null }
+  }
+}
 
 export function createGiftsService(database: Database) {
   const repo = createGiftsRepository(database)
+  const paymentsRepo = createPaymentsRepository(database)
   const weddingsRepo = createWeddingsRepository(database)
 
   async function getWeddingForUser(userId: string) {
@@ -44,6 +60,7 @@ export function createGiftsService(database: Database) {
         paymentType: string | null
         paymentValue: string | null
         isActive: boolean
+        status: GiftStatus
       }>
     ) {
       const gift = await repo.findById(giftId)
@@ -52,7 +69,16 @@ export function createGiftsService(database: Database) {
       const wedding = await weddingsRepo.findById(gift.weddingId)
       if (!wedding || wedding.userId !== userId) return { error: "forbidden" as const }
 
-      return { data: await repo.update(giftId, data) }
+      const { status, ...rest } = data
+      const statusFields = status ? statusToFields(status) : {}
+
+      const updated = await repo.update(giftId, { ...rest, ...statusFields })
+
+      if (status && status !== "locked" && gift.lockedAt) {
+        await paymentsRepo.expirePendingByGiftIds([giftId])
+      }
+
+      return { data: updated }
     },
 
     async deleteGift(userId: string, giftId: string) {

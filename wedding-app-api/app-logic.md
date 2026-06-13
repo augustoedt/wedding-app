@@ -78,9 +78,14 @@ Todas as rotas abaixo usam o prefixo `/admin` e exigem sessão autenticada via `
 	- erro comum: `404 { message: "No wedding found" }`
 - `PUT /admin/gifts/:id`
 	- params: `{ id: string }`
-	- body aceito: `{ name?: string; description?: string | null; price?: number (inteiro >= 1); imageUrl?: string | null; paymentType?: "url" | "pix" | null; paymentValue?: string | null; isActive?: boolean }`
+	- body aceito: `{ name?: string; description?: string | null; price?: number (inteiro >= 1); imageUrl?: string | null; paymentType?: "url" | "pix" | null; paymentValue?: string | null; isActive?: boolean; status?: "available" | "locked" | "purchased" }`
 	- retorno `200`: `Gift`
 	- erros comuns: `403`, `404`
+	- `status` permite mudar manualmente o status de compra do presente:
+		- `"available"` → `isActive = true, lockedAt = null` (disponível)
+		- `"locked"` → `isActive = false, lockedAt = now()` (travado)
+		- `"purchased"` → `isActive = false, lockedAt = null` (comprado)
+	- efeito: ao sair manualmente do status `"locked"` (para `"available"` ou `"purchased"`), qualquer `GiftPayment` com `status = "pending_confirmation"` associado a esse presente é marcado como `"expired"`
 - `DELETE /admin/gifts/:id`
 	- params: `{ id: string }`
 	- retorno `204`: sem body
