@@ -1,4 +1,4 @@
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
+import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
 
 const client = new S3Client({
   region: process.env.B2_REGION!,
@@ -30,4 +30,22 @@ export async function uploadImage(key: string, file: File) {
 
   console.log(`[storage] uploaded ${key}`)
   return `${process.env.B2_PUBLIC_URL}/${key}`
+}
+
+export async function deleteImage(key: string) {
+  console.log(`[storage] deleting ${key} from bucket ${process.env.B2_BUCKET}`)
+
+  try {
+    await client.send(
+      new DeleteObjectCommand({
+        Bucket: process.env.B2_BUCKET!,
+        Key: key,
+      })
+    )
+  } catch (e) {
+    console.error(`[storage] delete failed for ${key}:`, e)
+    throw e
+  }
+
+  console.log(`[storage] deleted ${key}`)
 }

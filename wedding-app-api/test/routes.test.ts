@@ -396,4 +396,57 @@ describe("images routes", () => {
     expect(response.status).toBe(201)
     expect(await response.json()).toEqual(image)
   })
+
+  it("returns 404 when deleting an image that does not exist", async () => {
+    const app = new Elysia().use(
+      createImagesRoutes({
+        guard: createAuthenticatedGuard() as unknown as typeof authGuard,
+        service: {
+          delete: async () => ({ error: "not_found" as const }),
+        } as unknown as ReturnType<typeof createImagesService>,
+      })
+    )
+
+    const response = await app.handle(
+      new Request("http://localhost/admin/images/img-1", { method: "DELETE" })
+    )
+
+    expect(response.status).toBe(404)
+    expect(await response.json()).toEqual({ message: "Image not found" })
+  })
+
+  it("returns 403 when deleting an image from another user's wedding", async () => {
+    const app = new Elysia().use(
+      createImagesRoutes({
+        guard: createAuthenticatedGuard() as unknown as typeof authGuard,
+        service: {
+          delete: async () => ({ error: "forbidden" as const }),
+        } as unknown as ReturnType<typeof createImagesService>,
+      })
+    )
+
+    const response = await app.handle(
+      new Request("http://localhost/admin/images/img-1", { method: "DELETE" })
+    )
+
+    expect(response.status).toBe(403)
+    expect(await response.json()).toEqual({ message: "Forbidden" })
+  })
+
+  it("returns 204 when an image is deleted", async () => {
+    const app = new Elysia().use(
+      createImagesRoutes({
+        guard: createAuthenticatedGuard() as unknown as typeof authGuard,
+        service: {
+          delete: async () => ({ data: null }),
+        } as unknown as ReturnType<typeof createImagesService>,
+      })
+    )
+
+    const response = await app.handle(
+      new Request("http://localhost/admin/images/img-1", { method: "DELETE" })
+    )
+
+    expect(response.status).toBe(204)
+  })
 })

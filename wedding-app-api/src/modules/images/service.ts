@@ -1,5 +1,5 @@
 import type { Database } from "../../db"
-import { uploadImage } from "../../lib/storage"
+import { deleteImage, uploadImage } from "../../lib/storage"
 import { createWeddingsRepository } from "../weddings/repository"
 import { createImagesRepository } from "./repository"
 
@@ -28,6 +28,24 @@ export function createImagesService(database: Database) {
       const url = await uploadImage(key, file)
 
       return { data: await repo.create({ weddingId: wedding.id, url, description }) }
+    },
+
+    async delete(userId: string, imageId: string) {
+      const image = await repo.findById(imageId)
+      if (!image) return { error: "not_found" as const }
+
+      const wedding = await weddingsRepo.findById(image.weddingId)
+      if (!wedding || wedding.userId !== userId) return { error: "forbidden" as const }
+
+      const key = image.url.replace(`${process.env.B2_PUBLIC_URL}/`, "")
+      try {
+        await deleteImage(key)
+      } catch (e) {
+        console.error(`[images] failed to delete ${key} from storage:`, e)
+      }
+
+      await repo.delete(imageId)
+      return { data: null }
     },
   }
 }

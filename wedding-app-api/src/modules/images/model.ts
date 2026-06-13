@@ -7,3 +7,7 @@ export const uploadImageBody = t.Object({
   }),
   description: t.Optional(t.String()),
 })
+
+export const imageIdParams = t.Object({
+  id: t.String(),
+})

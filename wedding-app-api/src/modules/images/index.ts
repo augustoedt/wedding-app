@@ -1,7 +1,7 @@
 import { Elysia } from "elysia"
 import type { authGuard } from "../../lib/auth-guard"
 import type { createImagesService } from "./service"
-import { uploadImageBody } from "./model"
+import { imageIdParams, uploadImageBody } from "./model"
 
 export function createImagesRoutes({
   service,
@@ -34,5 +34,17 @@ export function createImagesRoutes({
         })
       },
       { body: uploadImageBody }
+    )
+    .delete(
+      "/images/:id",
+      async ({ session, params, status }) => {
+        const result = await service.delete(session!.user.id, params.id)
+        if ("error" in result) {
+          if (result.error === "not_found") return status(404, { message: "Image not found" })
+          if (result.error === "forbidden") return status(403, { message: "Forbidden" })
+        }
+        return new Response(null, { status: 204 })
+      },
+      { params: imageIdParams }
     )
 }

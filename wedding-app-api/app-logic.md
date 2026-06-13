@@ -111,6 +111,11 @@ Todas as rotas abaixo usam o prefixo `/admin` e exigem sessão autenticada via `
 	- retorno `201`: `Image`
 	- erro comum: `404 { message: "No wedding found" }`
 	- efeito: faz upload do arquivo para o bucket Backblaze B2, em `wedding/{slug-do-casamento}/{uuid}.{ext}`, e cria o registro `Image` com a URL pública resultante
+- `DELETE /admin/images/:id`
+	- params: `{ id: string }`
+	- retorno `204`: sem body
+	- erros comuns: `403`, `404`
+	- efeito: remove o arquivo do bucket Backblaze B2 e o registro `Image` correspondente
 
 ---
 

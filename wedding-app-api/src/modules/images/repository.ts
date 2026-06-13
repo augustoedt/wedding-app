@@ -12,5 +12,14 @@ export function createImagesRepository(database: Database) {
     async findByWeddingId(weddingId: string) {
       return database.select().from(images).where(eq(images.weddingId, weddingId))
     },
+
+    async findById(id: string) {
+      const rows = await database.select().from(images).where(eq(images.id, id)).limit(1)
+      return rows[0] ?? null
+    },
+
+    async delete(id: string) {
+      await database.delete(images).where(eq(images.id, id))
+    },
   }
 }
