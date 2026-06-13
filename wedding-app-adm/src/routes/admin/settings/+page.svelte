@@ -19,9 +19,7 @@
 		}))
 	);
 
-	const previewUrl = $derived(
-		form.siteUrl && form.slug ? `${form.siteUrl.replace(/\/$/, '')}/${form.slug}` : null
-	);
+	const previewUrl = $derived(form.siteUrl ? form.siteUrl.replace(/\/$/, '') : null);
 
 	let loading = $state(false);
 	let formError = $state('');
@@ -134,7 +132,7 @@
 					</button>
 				</div>
 			{:else}
-				<p class="text-sm text-slate-400">Preencha a URL base e o slug para ver o link.</p>
+				<p class="text-sm text-slate-400">Preencha a URL base do site para ver o link.</p>
 			{/if}
 
 			{#if !data.wedding.isPublished}
@@ -190,17 +188,18 @@
 
 			<div>
 				<label for="s-slug" class="block text-sm font-medium text-slate-700">Slug</label>
-				<div class="mt-1 flex items-center gap-1.5">
-					<span class="shrink-0 text-sm text-slate-400">{form.siteUrl || 'https://...'}/</span>
-					<input
-						id="s-slug"
-						bind:value={form.slug}
-						required
-						class="input flex-1"
-						placeholder="ana-e-bruno"
-					/>
-				</div>
-				<p class="mt-1 text-xs text-slate-400">Apenas letras minúsculas, números e hífen.</p>
+				<input
+					id="s-slug"
+					bind:value={form.slug}
+					required
+					class="input mt-1"
+					placeholder="ana-e-bruno"
+				/>
+				<p class="mt-1 text-xs text-slate-400">
+					Identificador interno do casamento. Apenas letras minúsculas, números e hífen. Use este
+					valor na variável <code class="rounded bg-slate-100 px-1">PUBLIC_WEDDING_SLUG</code> do
+					FRONT.
+				</p>
 			</div>
 
 			<div>

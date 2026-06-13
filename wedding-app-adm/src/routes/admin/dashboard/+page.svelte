@@ -151,7 +151,7 @@
 			</div>
 		</div>
 
-		{@const publicUrl = w.siteUrl ? `${w.siteUrl.replace(/\/$/, '')}/${w.slug}` : null}
+		{@const publicUrl = w.siteUrl ? w.siteUrl.replace(/\/$/, '') : null}
 		<div class="mb-6 rounded-xl border border-rose-100 bg-rose-50 p-5">
 			<p class="mb-2 text-xs font-medium uppercase tracking-wide text-rose-500">
 				Link de Compartilhamento
