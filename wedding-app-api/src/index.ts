@@ -42,6 +42,9 @@ const app = new Elysia()
       credentials: true,
     })
   )
+  .onError(({ code, error, path, request }) => {
+    console.error(`[onError] ${request.method} ${path} - ${code}:`, error)
+  })
   .use(
     cron({
       name: "expireGiftLocks",

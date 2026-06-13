@@ -12,14 +12,22 @@ const client = new S3Client({
 export async function uploadImage(key: string, file: File) {
   const body = new Uint8Array(await file.arrayBuffer())
 
-  await client.send(
-    new PutObjectCommand({
-      Bucket: process.env.B2_BUCKET!,
-      Key: key,
-      Body: body,
-      ContentType: file.type,
-    })
-  )
+  console.log(`[storage] uploading ${key} (${body.length} bytes, ${file.type}) to bucket ${process.env.B2_BUCKET}`)
 
+  try {
+    await client.send(
+      new PutObjectCommand({
+        Bucket: process.env.B2_BUCKET!,
+        Key: key,
+        Body: body,
+        ContentType: file.type,
+      })
+    )
+  } catch (e) {
+    console.error(`[storage] upload failed for ${key}:`, e)
+    throw e
+  }
+
+  console.log(`[storage] uploaded ${key}`)
   return `${process.env.B2_PUBLIC_URL}/${key}`
 }

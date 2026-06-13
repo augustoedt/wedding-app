@@ -30,6 +30,9 @@ export const uploadImage = form(
 		description: v.optional(v.string())
 	}),
 	async (data) => {
+		console.log(
+			`[uploadImage] file=${data.file.name} size=${data.file.size} type=${data.file.type}`
+		);
 		const formData = new FormData();
 		formData.append('file', data.file);
 		if (data.description) formData.append('description', data.description);

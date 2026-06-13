@@ -32,13 +32,25 @@ export async function apiPost<T>(path: string, body: unknown): Promise<T> {
 }
 
 export async function apiPostForm<T>(path: string, formData: FormData): Promise<T> {
-	const res = await fetch(`${API_URL}${path}`, {
-		method: 'POST',
-		headers: { cookie: cookieHeader() },
-		body: formData
-	});
+	const url = `${API_URL}${path}`;
+	console.log(`[apiPostForm] POST ${url}`);
+
+	let res: Response;
+	try {
+		res = await fetch(url, {
+			method: 'POST',
+			headers: { cookie: cookieHeader() },
+			body: formData
+		});
+	} catch (e) {
+		console.error(`[apiPostForm] fetch error for ${url}:`, e);
+		throw e;
+	}
+
+	console.log(`[apiPostForm] ${res.status} from ${url}`);
 	if (!res.ok) {
 		const b = await res.json().catch(() => ({ message: 'Request failed' }));
+		console.error(`[apiPostForm] error body from ${url}:`, b);
 		error(res.status, b.message ?? 'Request failed');
 	}
 	return res.json();
