@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getImages } from '$lib/api/images.remote';
+	import { getImages, deleteImage } from '$lib/api/images.remote';
 
 	const images = getImages();
 
@@ -29,6 +29,12 @@
 		navigator.clipboard.writeText(image.url);
 		copiedId = image.id;
 		setTimeout(() => (copiedId = null), 2000);
+	}
+
+	async function remove(id: string) {
+		if (!confirm('Remover esta imagem?')) return;
+		await deleteImage(id);
+		images.refresh();
 	}
 
 	function formatDate(date: string) {
@@ -88,12 +94,21 @@
 							<p class="truncate text-sm text-slate-700">{image.description}</p>
 						{/if}
 						<p class="mt-0.5 text-xs text-slate-400">{formatDate(image.createdAt)}</p>
-						<button
-							onclick={() => copyUrl(image)}
-							class="mt-2 text-xs font-medium text-rose-500 hover:text-rose-700"
-						>
-							{copiedId === image.id ? '✓ URL copiada' : 'Copiar URL'}
-						</button>
+						<div class="mt-2 flex items-center justify-between">
+							<button
+								onclick={() => copyUrl(image)}
+								class="text-xs font-medium text-rose-500 hover:text-rose-700"
+							>
+								{copiedId === image.id ? '✓ URL copiada' : 'Copiar URL'}
+							</button>
+							<button
+								onclick={() => remove(image.id)}
+								aria-label="Remover"
+								class="text-rose-400 hover:text-rose-600"
+							>
+								<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+							</button>
+						</div>
 					</div>
 				</div>
 			{/each}

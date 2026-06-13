@@ -1,5 +1,6 @@
-import { query } from '$app/server';
-import { apiGet } from '$lib/server/api';
+import * as v from 'valibot';
+import { query, command } from '$app/server';
+import { apiGet, apiDelete } from '$lib/server/api';
 
 export type Image = {
 	id: string;
@@ -18,3 +19,5 @@ export const getImages = query(async () => {
 		throw e;
 	}
 });
+
+export const deleteImage = command(v.string(), async (id) => apiDelete(`/admin/images/${id}`));
