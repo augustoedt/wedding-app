@@ -1,29 +1,29 @@
 <script lang="ts">
-	import { getImages, uploadImage } from '$lib/api/images.remote';
+	import { getImages } from '$lib/api/images.remote';
 
 	const images = getImages();
 
 	let uploading = $state(false);
 	let uploadError = $state('');
 	let copiedId = $state<string | null>(null);
+	let formEl: HTMLFormElement;
 
-	const uploadForm = uploadImage.enhance(async (instance) => {
+	async function handleUpload(e: SubmitEvent) {
+		e.preventDefault();
 		uploading = true;
 		uploadError = '';
 		try {
-			await instance.submit();
-			if (instance.result?.url) {
-				instance.element.reset();
-				images.refresh();
-			} else {
-				uploadError = 'Não foi possível enviar a imagem. Verifique o formato e o tamanho do arquivo.';
-			}
+			const formData = new FormData(formEl);
+			const res = await fetch('/admin/images', { method: 'POST', body: formData });
+			if (!res.ok) throw new Error('Não foi possível enviar a imagem. Verifique o formato e o tamanho do arquivo.');
+			formEl.reset();
+			images.refresh();
 		} catch (e) {
 			uploadError = e instanceof Error ? e.message : 'Erro ao enviar imagem';
 		} finally {
 			uploading = false;
 		}
-	});
+	}
 
 	function copyUrl(image: { id: string; url: string }) {
 		navigator.clipboard.writeText(image.url);
@@ -43,7 +43,7 @@
 
 	<div class="mb-6 rounded-xl bg-white p-6 shadow-sm">
 		<h2 class="mb-4 text-base font-semibold text-slate-700">Enviar imagem</h2>
-		<form {...uploadForm} enctype="multipart/form-data" class="flex flex-wrap items-end gap-3">
+		<form bind:this={formEl} onsubmit={handleUpload} enctype="multipart/form-data" class="flex flex-wrap items-end gap-3">
 			<div class="min-w-48 flex-1">
 				<label for="md-file" class="block text-sm font-medium text-slate-700">Arquivo *</label>
 				<input

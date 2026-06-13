@@ -2,7 +2,7 @@
 	import { untrack } from 'svelte';
 	import { invalidateAll } from '$app/navigation';
 	import { createWedding, updateWedding } from '$lib/api/wedding.remote';
-	import { uploadImage } from '$lib/api/images.remote';
+	import type { Image } from '$lib/api/images.remote';
 
 	let { data } = $props();
 	const isNew = $derived(!data.wedding);
@@ -30,24 +30,25 @@
 
 	let uploadingCover = $state(false);
 	let coverUploadError = $state('');
+	let coverFormEl: HTMLFormElement;
 
-	const uploadCoverForm = uploadImage.enhance(async (instance) => {
+	async function handleCoverUpload(e: SubmitEvent) {
+		e.preventDefault();
 		uploadingCover = true;
 		coverUploadError = '';
 		try {
-			await instance.submit();
-			if (instance.result?.url) {
-				form.coverImage = instance.result.url;
-				instance.element.reset();
-			} else {
-				coverUploadError = 'Não foi possível enviar a imagem. Verifique o formato e o tamanho do arquivo.';
-			}
+			const formData = new FormData(coverFormEl);
+			const res = await fetch('/admin/images', { method: 'POST', body: formData });
+			if (!res.ok) throw new Error('Não foi possível enviar a imagem. Verifique o formato e o tamanho do arquivo.');
+			const image: Image = await res.json();
+			form.coverImage = image.url;
+			coverFormEl.reset();
 		} catch (e) {
 			coverUploadError = e instanceof Error ? e.message : 'Erro ao enviar imagem';
 		} finally {
 			uploadingCover = false;
 		}
-	});
+	}
 
 	async function submit() {
 		loading = true;
@@ -242,7 +243,7 @@
 
 				<div class="mt-2 flex items-center gap-2">
 					<span class="text-xs text-slate-400">ou</span>
-					<form {...uploadCoverForm} enctype="multipart/form-data" class="flex items-center gap-2">
+					<form bind:this={coverFormEl} onsubmit={handleCoverUpload} enctype="multipart/form-data" class="flex items-center gap-2">
 						<input
 							type="file"
 							name="file"
