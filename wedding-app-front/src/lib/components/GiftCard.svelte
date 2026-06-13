@@ -15,20 +15,46 @@
 		);
 	}
 
+	let isLandscape = $state(false);
+
+	function onImageLoad(event: Event) {
+		const img = event.currentTarget;
+		if (!(img instanceof HTMLImageElement)) return;
+		isLandscape = img.naturalWidth > img.naturalHeight;
+	}
+
 	const isBought = $derived(!gift.isActive && !gift.lockedAt);
 	const isLocked = $derived(!gift.isActive && !!gift.lockedAt);
 </script>
 
 <div
-	class="flex flex-col overflow-hidden rounded-xl border border-stone-100 bg-white shadow-sm transition"
+	class="mx-auto flex max-h-80 w-full max-w-[20rem] flex-col overflow-hidden rounded-xl border border-stone-100 bg-white shadow-sm transition"
 	class:grayscale={isBought}
 	class:opacity-60={isBought}
 	class:opacity-75={isLocked}
 >
 	<!-- Image -->
-	<div class="relative aspect-square bg-stone-100">
+	<div class="relative h-44 overflow-hidden bg-stone-100">
 		{#if gift.imageUrl}
-			<img src={gift.imageUrl} alt={gift.name} class="h-full w-full object-cover" loading="lazy" />
+			<img
+				src={gift.imageUrl}
+				alt=""
+				class="absolute inset-0 h-full w-full scale-110 object-cover blur-xl"
+				loading="lazy"
+				aria-hidden="true"
+			/>
+			<div class="absolute inset-0 bg-white/30"></div>
+			<div class="flex h-full w-full items-center justify-center">
+				<img
+					src={gift.imageUrl}
+					alt={gift.name}
+					onload={onImageLoad}
+					class={`relative z-10 max-h-full max-w-full object-center ${
+						isLandscape ? 'h-full w-full object-cover' : 'h-full w-auto object-contain'
+					}`}
+					loading="lazy"
+				/>
+			</div>
 		{:else}
 			<div class="flex h-full w-full items-center justify-center">
 				<svg class="h-16 w-16 text-stone-300" viewBox="0 0 24 24" fill="currentColor">
