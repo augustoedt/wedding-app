@@ -1,10 +1,11 @@
 <script lang="ts">
 	import type { Wedding } from '$lib/api';
+	import { parseDateOnly } from '$lib/utils/date';
 
 	let { wedding }: { wedding: Wedding } = $props();
 
 	function formatDate(dateStr: string) {
-		const d = new Date(dateStr);
+		const d = parseDateOnly(dateStr);
 		return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
 	}
 

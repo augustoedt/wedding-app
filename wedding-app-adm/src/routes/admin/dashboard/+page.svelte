@@ -2,6 +2,7 @@
 	import { getWedding, createWedding, updateWedding } from '$lib/api/wedding.remote';
 	import { getGuests } from '$lib/api/guests.remote';
 	import { getGifts } from '$lib/api/gifts.remote';
+	import { parseDateOnly } from '$lib/utils/date';
 
 	const wedding = getWedding();
 	const guests = getGuests();
@@ -223,7 +224,7 @@
 						<p class="mt-0.5 text-sm text-slate-500">/{w.slug}</p>
 						{#if w.date}
 							<p class="mt-1 text-sm text-slate-600">
-								📅 {new Date(w.date).toLocaleDateString('pt-BR')}
+								📅 {parseDateOnly(w.date).toLocaleDateString('pt-BR')}
 							</p>
 						{/if}
 						{#if w.description}

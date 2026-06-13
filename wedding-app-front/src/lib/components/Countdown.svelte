@@ -1,9 +1,10 @@
 <script lang="ts">
 	import FlipCard from './FlipCard.svelte';
+	import { parseDateOnly } from '$lib/utils/date';
 
 	let { date }: { date: string } = $props();
 
-	const weddingDate = $derived(new Date(date));
+	const weddingDate = $derived(parseDateOnly(date));
 	const isPast = $derived(weddingDate < new Date());
 
 	let days = $state(0);
