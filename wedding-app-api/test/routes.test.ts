@@ -208,6 +208,59 @@ describe("guests routes", () => {
     expect(response.status).toBe(404)
     expect(await response.json()).toEqual({ message: "Guest not found" })
   })
+
+  it("returns 404 when deleting a guest that does not exist", async () => {
+    const app = new Elysia().use(
+      createGuestsRoutes({
+        guard: createAuthenticatedGuard() as unknown as typeof authGuard,
+        service: {
+          deleteGuest: async () => ({ error: "not_found" as const }),
+        } as unknown as ReturnType<typeof createGuestsService>,
+      })
+    )
+
+    const response = await app.handle(
+      new Request("http://localhost/admin/guests/guest-1", { method: "DELETE" })
+    )
+
+    expect(response.status).toBe(404)
+    expect(await response.json()).toEqual({ message: "Guest not found" })
+  })
+
+  it("returns 403 when deleting a guest from another user's wedding", async () => {
+    const app = new Elysia().use(
+      createGuestsRoutes({
+        guard: createAuthenticatedGuard() as unknown as typeof authGuard,
+        service: {
+          deleteGuest: async () => ({ error: "forbidden" as const }),
+        } as unknown as ReturnType<typeof createGuestsService>,
+      })
+    )
+
+    const response = await app.handle(
+      new Request("http://localhost/admin/guests/guest-1", { method: "DELETE" })
+    )
+
+    expect(response.status).toBe(403)
+    expect(await response.json()).toEqual({ message: "Forbidden" })
+  })
+
+  it("returns 204 when a guest is deleted", async () => {
+    const app = new Elysia().use(
+      createGuestsRoutes({
+        guard: createAuthenticatedGuard() as unknown as typeof authGuard,
+        service: {
+          deleteGuest: async () => ({ data: null }),
+        } as unknown as ReturnType<typeof createGuestsService>,
+      })
+    )
+
+    const response = await app.handle(
+      new Request("http://localhost/admin/guests/guest-1", { method: "DELETE" })
+    )
+
+    expect(response.status).toBe(204)
+  })
 })
 
 describe("public routes", () => {
