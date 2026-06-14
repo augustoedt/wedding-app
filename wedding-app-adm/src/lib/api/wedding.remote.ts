@@ -12,6 +12,18 @@ export type Wedding = {
 	date?: string | null;
 	description?: string | null;
 	coverImage?: string | null;
+	venueName?: string | null;
+	venueCep?: string | null;
+	venueAddress?: string | null;
+	venueNumber?: string | null;
+	venueNeighborhood?: string | null;
+	venueCity?: string | null;
+	venueState?: string | null;
+	venueTime?: string | null;
+	venueImage?: string | null;
+	dressCodeGuests?: string | null;
+	dressCodeGroomsmen?: string | null;
+	ogImage?: string | null;
 	isPublished: boolean;
 	createdAt: string;
 	updatedAt: string;
@@ -35,7 +47,19 @@ export const createWedding = command(
 		inviteMessage: v.optional(v.string()),
 		date: v.optional(v.string()),
 		description: v.optional(v.string()),
-		coverImage: v.optional(v.string())
+		coverImage: v.optional(v.string()),
+		venueName: v.optional(v.string()),
+		venueCep: v.optional(v.string()),
+		venueAddress: v.optional(v.string()),
+		venueNumber: v.optional(v.string()),
+		venueNeighborhood: v.optional(v.string()),
+		venueCity: v.optional(v.string()),
+		venueState: v.optional(v.string()),
+		venueTime: v.optional(v.string()),
+		venueImage: v.optional(v.string()),
+		dressCodeGuests: v.optional(v.string()),
+		dressCodeGroomsmen: v.optional(v.string()),
+		ogImage: v.optional(v.string())
 	}),
 	async (data) => apiPost<Wedding>('/admin/wedding', data)
 );
@@ -50,6 +74,18 @@ export const updateWedding = command(
 		date: v.optional(v.nullable(v.string())),
 		description: v.optional(v.nullable(v.string())),
 		coverImage: v.optional(v.nullable(v.string())),
+		venueName: v.optional(v.nullable(v.string())),
+		venueCep: v.optional(v.nullable(v.string())),
+		venueAddress: v.optional(v.nullable(v.string())),
+		venueNumber: v.optional(v.nullable(v.string())),
+		venueNeighborhood: v.optional(v.nullable(v.string())),
+		venueCity: v.optional(v.nullable(v.string())),
+		venueState: v.optional(v.nullable(v.string())),
+		venueTime: v.optional(v.nullable(v.string())),
+		venueImage: v.optional(v.nullable(v.string())),
+		dressCodeGuests: v.optional(v.nullable(v.string())),
+		dressCodeGroomsmen: v.optional(v.nullable(v.string())),
+		ogImage: v.optional(v.nullable(v.string())),
 		isPublished: v.optional(v.boolean())
 	}),
 	async ({ id, ...body }) => apiPut<Wedding>(`/admin/wedding/${id}`, body)

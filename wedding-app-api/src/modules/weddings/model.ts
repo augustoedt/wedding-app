@@ -8,6 +8,18 @@ export const createWeddingBody = t.Object({
   date: t.Optional(t.String()),
   description: t.Optional(t.String()),
   coverImage: t.Optional(t.String()),
+  venueName: t.Optional(t.String()),
+  venueCep: t.Optional(t.String()),
+  venueAddress: t.Optional(t.String()),
+  venueNumber: t.Optional(t.String()),
+  venueNeighborhood: t.Optional(t.String()),
+  venueCity: t.Optional(t.String()),
+  venueState: t.Optional(t.String()),
+  venueTime: t.Optional(t.String()),
+  venueImage: t.Optional(t.String()),
+  dressCodeGuests: t.Optional(t.String()),
+  dressCodeGroomsmen: t.Optional(t.String()),
+  ogImage: t.Optional(t.String()),
 })
 
 export const updateWeddingBody = t.Object({
@@ -18,6 +30,18 @@ export const updateWeddingBody = t.Object({
   date: t.Optional(t.Nullable(t.String())),
   description: t.Optional(t.Nullable(t.String())),
   coverImage: t.Optional(t.Nullable(t.String())),
+  venueName: t.Optional(t.Nullable(t.String())),
+  venueCep: t.Optional(t.Nullable(t.String())),
+  venueAddress: t.Optional(t.Nullable(t.String())),
+  venueNumber: t.Optional(t.Nullable(t.String())),
+  venueNeighborhood: t.Optional(t.Nullable(t.String())),
+  venueCity: t.Optional(t.Nullable(t.String())),
+  venueState: t.Optional(t.Nullable(t.String())),
+  venueTime: t.Optional(t.Nullable(t.String())),
+  venueImage: t.Optional(t.Nullable(t.String())),
+  dressCodeGuests: t.Optional(t.Nullable(t.String())),
+  dressCodeGroomsmen: t.Optional(t.Nullable(t.String())),
+  ogImage: t.Optional(t.Nullable(t.String())),
   isPublished: t.Optional(t.Boolean()),
 })
 

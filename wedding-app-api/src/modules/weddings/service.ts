@@ -19,6 +19,18 @@ export function createWeddingsService(database: Database) {
         date?: string
         description?: string
         coverImage?: string
+        venueName?: string
+        venueCep?: string
+        venueAddress?: string
+        venueNumber?: string
+        venueNeighborhood?: string
+        venueCity?: string
+        venueState?: string
+        venueTime?: string
+        venueImage?: string
+        dressCodeGuests?: string
+        dressCodeGroomsmen?: string
+        ogImage?: string
       }
     ) {
       const existing = await repo.findBySlug(data.slug)
@@ -41,6 +53,18 @@ export function createWeddingsService(database: Database) {
         date: string | null
         description: string | null
         coverImage: string | null
+        venueName: string | null
+        venueCep: string | null
+        venueAddress: string | null
+        venueNumber: string | null
+        venueNeighborhood: string | null
+        venueCity: string | null
+        venueState: string | null
+        venueTime: string | null
+        venueImage: string | null
+        dressCodeGuests: string | null
+        dressCodeGroomsmen: string | null
+        ogImage: string | null
         isPublished: boolean
       }>
     ) {

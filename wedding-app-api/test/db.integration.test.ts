@@ -320,12 +320,20 @@ describe("routes integration", () => {
       jsonRequest("http://localhost/admin/wedding/w-1", "PUT", {
         title: "Título Atualizado",
         isPublished: true,
+        venueName: "Espaço Jardim",
+        venueCep: "01310-100",
+        dressCodeGuests: "Traje social esporte fino",
+        ogImage: "https://example.com/og.jpg",
       })
     )
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body.title).toBe("Título Atualizado")
     expect(body.isPublished).toBe(true)
+    expect(body.venueName).toBe("Espaço Jardim")
+    expect(body.venueCep).toBe("01310-100")
+    expect(body.dressCodeGuests).toBe("Traje social esporte fino")
+    expect(body.ogImage).toBe("https://example.com/og.jpg")
   })
 
   it("returns 403 when user tries to update another user's wedding", async () => {
@@ -402,6 +410,10 @@ describe("routes integration", () => {
       new Request("http://localhost/public/weddings/public-slug")
     )
     expect(weddingResponse.status).toBe(200)
+    const weddingBody = await weddingResponse.json()
+    expect(weddingBody.venueName).toBeNull()
+    expect(weddingBody.dressCodeGuests).toBeNull()
+    expect(weddingBody.ogImage).toBeNull()
 
     const rsvpResponse = await app.handle(
       jsonRequest("http://localhost/public/weddings/public-slug/rsvp", "POST", {
