@@ -21,7 +21,6 @@
 		{ label: 'Página Inicial', href: '/' },
 		{ label: 'Cerimônia & Festa', href: '/cerimonia' },
 		{ label: 'Dicas de Hospedagem', href: '/hospedagem' },
-		{ label: 'Dress Code', href: '/dresscode' },
 		{ label: 'Mensagens', href: '/mensagens' }
 	];
 
@@ -84,7 +83,7 @@
 						{#each navItems as item (item.href)}
 							<li>
 								<a
-									href={resolve('/')}
+									href={item.href}
 									class="block px-5 py-2.5 text-sm text-stone-700 hover:bg-stone-50"
 									onclick={() => (menuOpen = false)}
 								>
@@ -136,7 +135,7 @@
 				{#each navItems as item (item.href)}
 					<li>
 						<a
-							href={resolve('/')}
+							href={item.href}
 							class="block border-b border-stone-100 py-3 text-sm text-stone-700"
 							onclick={() => (mobileOpen = false)}
 						>

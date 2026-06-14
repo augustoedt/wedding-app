@@ -8,6 +8,18 @@ export interface Wedding {
 	date: string | null;
 	description: string | null;
 	coverImage: string | null;
+	venueName: string | null;
+	venueCep: string | null;
+	venueAddress: string | null;
+	venueNumber: string | null;
+	venueNeighborhood: string | null;
+	venueCity: string | null;
+	venueState: string | null;
+	venueTime: string | null;
+	venueImage: string | null;
+	dressCodeGuests: string | null;
+	dressCodeGroomsmen: string | null;
+	ogImage: string | null;
 }
 
 export interface Guest {
