@@ -20,7 +20,6 @@
 	const navItems = [
 		{ label: 'Página Inicial', href: '/' },
 		{ label: 'Cerimônia & Festa', href: '/cerimonia' },
-		{ label: 'Dicas de Hospedagem', href: '/hospedagem' },
 		{ label: 'Mensagens', href: '/mensagens' }
 	];
 

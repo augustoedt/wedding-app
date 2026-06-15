@@ -13,6 +13,7 @@ export type GiftPayment = {
 	buyerEmail: string;
 	amount: number;
 	status: PaymentStatus;
+	message: string | null;
 	mercadoPagoId?: string | null;
 	mercadoPagoPreferenceId?: string | null;
 	createdAt: string;
@@ -23,7 +24,10 @@ export const getPayments = query(async () => {
 	return apiGet<GiftPayment[]>('/admin/payments');
 });
 
-export const confirmPayment = command(
-	v.string(),
-	async (id) => apiPut<{ id: string; status: 'approved' }>(`/admin/payments/${id}/confirm`, {})
+export const confirmPayment = command(v.string(), async (id) =>
+	apiPut<{
+		id: string;
+		status: 'approved';
+		message: { id: string; senderName: string; message: string; isVisible: boolean } | null;
+	}>(`/admin/payments/${id}/confirm`, {})
 );

@@ -2,11 +2,15 @@ import { beforeAll, afterAll, beforeEach, describe, expect, it } from "bun:test"
 import { Elysia } from "elysia"
 import { eq } from "drizzle-orm"
 import { authGuard } from "../src/lib/auth-guard"
-import { giftPayments, guests, gifts, user, weddings } from "../src/db/schema"
+import { giftPayments, guestMessages, guests, gifts, user, weddings } from "../src/db/schema"
 import { createGiftsRoutes } from "../src/modules/gifts"
 import { createGiftsService } from "../src/modules/gifts/service"
 import { createGuestsRoutes } from "../src/modules/guests"
 import { createGuestsService } from "../src/modules/guests/service"
+import { createMessagesRoutes } from "../src/modules/messages"
+import { createMessagesService } from "../src/modules/messages/service"
+import { createPaymentsRoutes } from "../src/modules/payments"
+import { createPaymentsService } from "../src/modules/payments/service"
 import { createPublicRoutes } from "../src/modules/public"
 import { createPublicService } from "../src/modules/public/service"
 import { createWeddingsRoutes } from "../src/modules/weddings"
@@ -109,11 +113,13 @@ async function seedGiftPayment({
   giftId,
   weddingId,
   status = "pending_confirmation",
+  message,
 }: {
   id: string
   giftId: string
   weddingId: string
   status?: string
+  message?: string
 }) {
   await testDb.insert(giftPayments).values({
     id,
@@ -123,6 +129,34 @@ async function seedGiftPayment({
     buyerEmail: "buyer@example.com",
     amount: 1000,
     status,
+    message,
+    createdAt: now,
+    updatedAt: now,
+  })
+}
+
+async function seedGuestMessage({
+  id,
+  weddingId,
+  paymentId,
+  senderName = "Buyer",
+  message = "Parabéns!",
+  isVisible = true,
+}: {
+  id: string
+  weddingId: string
+  paymentId: string
+  senderName?: string
+  message?: string
+  isVisible?: boolean
+}) {
+  await testDb.insert(guestMessages).values({
+    id,
+    weddingId,
+    paymentId,
+    senderName,
+    message,
+    isVisible,
     createdAt: now,
     updatedAt: now,
   })
@@ -476,5 +510,128 @@ describe("routes integration", () => {
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body.rsvp).toBe("confirmed")
+  })
+})
+
+describe("guest messages integration", () => {
+  it("confirmPayment creates a guest message when payment has a message", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-1")
+    await seedWedding({ id: "w-1", userId: "u-1", slug: "slug-1" })
+    await seedGift({ id: "g-1", weddingId: "w-1", active: false, lockedAt: now })
+    await seedGiftPayment({
+      id: "p-1",
+      giftId: "g-1",
+      weddingId: "w-1",
+      message: "Parabéns aos noivos!",
+    })
+
+    const guard = createAuthenticatedGuard("u-1") as unknown as typeof authGuard
+    const app = new Elysia().use(
+      createPaymentsRoutes({ service: createPaymentsService(testDb), guard })
+    )
+
+    const res = await app.handle(
+      new Request("http://localhost/admin/payments/p-1/confirm", { method: "PUT" })
+    )
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.status).toBe("approved")
+    expect(body.message?.senderName).toBe("Buyer")
+    expect(body.message?.message).toBe("Parabéns aos noivos!")
+    expect(body.message?.isVisible).toBe(true)
+
+    const rows = await testDb
+      .select()
+      .from(guestMessages)
+      .where(eq(guestMessages.weddingId, "w-1"))
+    expect(rows).toHaveLength(1)
+    expect(rows[0]?.message).toBe("Parabéns aos noivos!")
+  })
+
+  it("confirmPayment does not create a guest message when payment has no message", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-1")
+    await seedWedding({ id: "w-1", userId: "u-1", slug: "slug-1" })
+    await seedGift({ id: "g-1", weddingId: "w-1", active: false, lockedAt: now })
+    await seedGiftPayment({ id: "p-1", giftId: "g-1", weddingId: "w-1" })
+
+    const guard = createAuthenticatedGuard("u-1") as unknown as typeof authGuard
+    const app = new Elysia().use(
+      createPaymentsRoutes({ service: createPaymentsService(testDb), guard })
+    )
+
+    const res = await app.handle(
+      new Request("http://localhost/admin/payments/p-1/confirm", { method: "PUT" })
+    )
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.message).toBeNull()
+
+    const rows = await testDb
+      .select()
+      .from(guestMessages)
+      .where(eq(guestMessages.weddingId, "w-1"))
+    expect(rows).toHaveLength(0)
+  })
+
+  it("messages service blocks setVisibility by non-owner", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-owner")
+    await seedUser("u-other")
+    await seedWedding({ id: "w-1", userId: "u-owner", slug: "owner-slug" })
+    await seedGift({ id: "g-1", weddingId: "w-1" })
+    await seedGiftPayment({ id: "p-1", giftId: "g-1", weddingId: "w-1", status: "approved" })
+    await seedGuestMessage({ id: "m-1", weddingId: "w-1", paymentId: "p-1" })
+
+    const service = createMessagesService(testDb)
+    const result = await service.setVisibility("u-other", "m-1", false)
+
+    expect(result).toEqual({ error: "forbidden" })
+  })
+
+  it("public listMessages returns only visible messages", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-1")
+    await seedWedding({ id: "w-1", userId: "u-1", slug: "public-slug", published: true })
+    await seedGift({ id: "g-1", weddingId: "w-1" })
+    await seedGiftPayment({ id: "p-1", giftId: "g-1", weddingId: "w-1", status: "approved" })
+    await seedGiftPayment({ id: "p-2", giftId: "g-1", weddingId: "w-1", status: "approved" })
+    await seedGuestMessage({
+      id: "m-1",
+      weddingId: "w-1",
+      paymentId: "p-1",
+      senderName: "Visível",
+      message: "Mensagem visível",
+      isVisible: true,
+    })
+    await seedGuestMessage({
+      id: "m-2",
+      weddingId: "w-1",
+      paymentId: "p-2",
+      senderName: "Oculto",
+      message: "Mensagem oculta",
+      isVisible: false,
+    })
+
+    const app = new Elysia().use(
+      createPublicRoutes({
+        service: createPublicService(testDb),
+        guestsService: createGuestsService(testDb),
+      })
+    )
+
+    const res = await app.handle(
+      new Request("http://localhost/public/weddings/public-slug/messages")
+    )
+    expect(res.status).toBe(200)
+    const messages = await res.json()
+    expect(messages).toHaveLength(1)
+    expect(messages[0]?.senderName).toBe("Visível")
+    expect(messages[0]?.message).toBe("Mensagem visível")
   })
 })

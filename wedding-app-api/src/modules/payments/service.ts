@@ -1,5 +1,6 @@
 import type { Database } from "../../db"
 import { createGiftsRepository } from "../gifts/repository"
+import { createMessagesRepository } from "../messages/repository"
 import { createWeddingsRepository } from "../weddings/repository"
 import { createPaymentsRepository } from "./repository"
 
@@ -7,6 +8,7 @@ export function createPaymentsService(database: Database) {
   const repo = createPaymentsRepository(database)
   const weddingsRepo = createWeddingsRepository(database)
   const giftsRepo = createGiftsRepository(database)
+  const messagesRepo = createMessagesRepository(database)
 
   return {
     async listPayments(
@@ -42,7 +44,17 @@ export function createPaymentsService(database: Database) {
       await repo.updateStatus(paymentId, "approved")
       await giftsRepo.confirmPurchase(payment.giftId)
 
-      return { data: { id: paymentId, status: "approved" } }
+      const createdMessage = payment.message
+        ? await messagesRepo.create({
+            weddingId: payment.weddingId,
+            paymentId: payment.id,
+            senderName: payment.buyerName,
+            message: payment.message,
+            isVisible: true,
+          })
+        : null
+
+      return { data: { id: paymentId, status: "approved", message: createdMessage ?? null } }
     },
   }
 }

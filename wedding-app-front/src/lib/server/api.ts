@@ -49,6 +49,12 @@ export interface LockResult {
 	paymentValue: string | null;
 }
 
+export interface GuestMessage {
+	senderName: string;
+	message: string;
+	createdAt: string;
+}
+
 export async function getWedding(slug: string, fetchFn: typeof fetch = fetch): Promise<Wedding> {
 	const res = await fetchFn(`${API_URL}/public/weddings/${slug}`);
 	if (!res.ok) throw new Error(`Wedding not found: ${res.status}`);
@@ -81,7 +87,7 @@ export async function getGifts(
 export async function lockGift(
 	slug: string,
 	giftId: string,
-	payload: { buyerName: string; buyerEmail: string }
+	payload: { buyerName: string; buyerEmail: string; message?: string }
 ): Promise<LockResult> {
 	const res = await fetch(`${API_URL}/public/weddings/${slug}/gifts/${giftId}/lock`, {
 		method: 'POST',
@@ -89,6 +95,15 @@ export async function lockGift(
 		body: JSON.stringify(payload)
 	});
 	if (!res.ok) throw new Error(`Lock failed: ${res.status}`);
+	return res.json();
+}
+
+export async function getMessages(
+	slug: string,
+	fetchFn: typeof fetch = fetch
+): Promise<GuestMessage[]> {
+	const res = await fetchFn(`${API_URL}/public/weddings/${slug}/messages`);
+	if (!res.ok) throw new Error(`Messages fetch failed: ${res.status}`);
 	return res.json();
 }
 

@@ -16,6 +16,7 @@ export const giftPayments = pgTable("gift_payments", {
   buyerEmail: text("buyer_email").notNull(),
   amount: integer("amount").notNull(),
   status: text("status").notNull().default("pending"),
+  message: text("message"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 })

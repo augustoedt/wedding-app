@@ -43,6 +43,13 @@
       "when": 1781470581013,
       "tag": "0005_fancy_excalibur",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1781479794204,
+      "tag": "0006_abnormal_kid_colt",
+      "breakpoints": true
     }
   ]
 }

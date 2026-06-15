@@ -1,1 +1,1 @@
-export type { Wedding, Guest } from '$lib/server/api';
+export type { Wedding, Guest, GuestMessage } from '$lib/server/api';

@@ -25,4 +25,5 @@ export const giftLockParams = t.Object({
 export const lockGiftBody = t.Object({
   buyerName: t.String({ minLength: 1 }),
   buyerEmail: t.String({ format: "email" }),
+  message: t.Optional(t.String()),
 })

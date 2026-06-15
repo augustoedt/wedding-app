@@ -11,6 +11,8 @@ import { createGuestsRoutes } from "./modules/guests"
 import { createGuestsService } from "./modules/guests/service"
 import { createImagesRoutes } from "./modules/images"
 import { createImagesService } from "./modules/images/service"
+import { createMessagesRoutes } from "./modules/messages"
+import { createMessagesService } from "./modules/messages/service"
 import { createPaymentsRepository } from "./modules/payments/repository"
 import { createPaymentsRoutes } from "./modules/payments"
 import { createPaymentsService } from "./modules/payments/service"
@@ -80,6 +82,12 @@ const app = new Elysia()
   .use(
     createImagesRoutes({
       service: createImagesService(db),
+      guard: authGuard,
+    })
+  )
+  .use(
+    createMessagesRoutes({
+      service: createMessagesService(db),
       guard: authGuard,
     })
   )

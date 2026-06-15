@@ -1,5 +1,6 @@
 import type { Database } from "../../db"
 import { createGiftsRepository } from "../gifts/repository"
+import { createMessagesRepository } from "../messages/repository"
 import { createPaymentsRepository } from "../payments/repository"
 import { createPublicRepository } from "./repository"
 
@@ -7,6 +8,7 @@ export function createPublicService(database: Database) {
   const repo = createPublicRepository(database)
   const giftsRepo = createGiftsRepository(database)
   const paymentsRepo = createPaymentsRepository(database)
+  const messagesRepo = createMessagesRepository(database)
 
   return {
     async getWedding(slug: string) {
@@ -45,7 +47,7 @@ export function createPublicService(database: Database) {
     async lockGift(
       slug: string,
       giftId: string,
-      data: { buyerName: string; buyerEmail: string }
+      data: { buyerName: string; buyerEmail: string; message?: string }
     ) {
       const wedding = await repo.findWeddingBySlug(slug)
       if (!wedding) return { error: "not_found" as const }
@@ -62,6 +64,7 @@ export function createPublicService(database: Database) {
         buyerEmail: data.buyerEmail,
         amount: gift.price,
         status: "pending_confirmation",
+        message: data.message,
       })
 
       return {
@@ -70,6 +73,20 @@ export function createPublicService(database: Database) {
           paymentType: gift.paymentType,
           paymentValue: gift.paymentValue,
         },
+      }
+    },
+
+    async listMessages(slug: string) {
+      const wedding = await repo.findWeddingBySlug(slug)
+      if (!wedding) return { error: "not_found" as const }
+
+      const messages = await messagesRepo.findVisibleByWeddingId(wedding.id)
+      return {
+        data: messages.map((m) => ({
+          senderName: m.senderName,
+          message: m.message,
+          createdAt: m.createdAt,
+        })),
       }
     },
   }

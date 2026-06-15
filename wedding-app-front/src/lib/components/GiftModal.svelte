@@ -21,6 +21,7 @@
 	let step = $state<Step>('form');
 	let buyerName = $state('');
 	let buyerEmail = $state('');
+	let message = $state('');
 	let loading = $state(false);
 	let result = $state<LockResult | null>(null);
 	let errorMsg = $state('');
@@ -39,7 +40,8 @@
 				slug,
 				giftId: gift.id,
 				buyerName: buyerName.trim(),
-				buyerEmail: buyerEmail.trim()
+				buyerEmail: buyerEmail.trim(),
+				message: message.trim() || undefined
 			});
 			onPurchased(gift.id);
 			if (result.paymentType === 'url' && result.paymentValue) {
@@ -133,6 +135,16 @@
 						>
 							Seu e-mail
 						</label>
+					</div>
+
+					<div class="relative">
+						<textarea
+							id="buyer-message"
+							bind:value={message}
+							rows="3"
+							placeholder="Deixe uma mensagem para os noivos (opcional)"
+							class="w-full resize-none rounded-lg border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm text-stone-800 outline-none focus:border-stone-400"
+						></textarea>
 					</div>
 
 					<div class="flex gap-3 pt-2">

@@ -40,6 +40,7 @@ export function createPaymentsRepository(database: Database) {
       buyerEmail: string
       amount: number
       status?: string
+      message?: string
     }) {
       const rows = await database.insert(giftPayments).values(data).returning()
       return rows[0]!

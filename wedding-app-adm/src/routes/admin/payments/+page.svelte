@@ -1,11 +1,19 @@
 <script lang="ts">
 	import { getPayments, confirmPayment, type PaymentStatus } from '$lib/api/payments.remote';
+	import { setMessageVisibility } from '$lib/api/messages.remote';
 
 	const payments = getPayments();
 
 	let filterStatus = $state('');
 	let pendingId = $state<string | null>(null);
 	let confirming = $state(false);
+	let confirmedMessage = $state<{
+		id: string;
+		senderName: string;
+		message: string;
+		isVisible: boolean;
+	} | null>(null);
+	let updatingVisibility = $state(false);
 
 	const filtered = $derived(
 		filterStatus
@@ -16,10 +24,21 @@
 	async function handleConfirm() {
 		if (!pendingId) return;
 		confirming = true;
-		await confirmPayment(pendingId);
+		const result = await confirmPayment(pendingId);
 		pendingId = null;
 		confirming = false;
 		payments.refresh();
+		if (result.message) {
+			confirmedMessage = result.message;
+		}
+	}
+
+	async function handleToggleVisibility(isVisible: boolean) {
+		if (!confirmedMessage) return;
+		updatingVisibility = true;
+		await setMessageVisibility({ id: confirmedMessage.id, isVisible });
+		confirmedMessage = { ...confirmedMessage, isVisible };
+		updatingVisibility = false;
 	}
 
 	const statusLabels: Record<PaymentStatus, string> = {
@@ -86,6 +105,9 @@
 							<td class="px-4 py-3">
 								<p class="font-medium text-slate-800">{p.buyerName}</p>
 								<p class="text-xs text-slate-400">{p.buyerEmail}</p>
+								{#if p.message}
+									<p class="mt-1 max-w-xs truncate text-xs text-slate-400 italic">"{p.message}"</p>
+								{/if}
 							</td>
 							<td class="px-4 py-3 font-medium text-slate-700">{formatPrice(p.amount)}</td>
 							<td class="px-4 py-3">
@@ -141,6 +163,43 @@
 					class="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-600 disabled:opacity-50"
 				>
 					{confirming ? 'Confirmando...' : 'Confirmar'}
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
+
+{#if confirmedMessage}
+	<div
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="message-dialog-title"
+		class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+	>
+		<div class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+			<h2 id="message-dialog-title" class="mb-2 text-base font-semibold text-slate-800">
+				Mensagem do convidado
+			</h2>
+			<p class="mb-1 text-sm font-medium text-slate-700">{confirmedMessage.senderName}</p>
+			<p class="mb-4 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
+				{confirmedMessage.message}
+			</p>
+			<label class="mb-6 flex items-center gap-2 text-sm text-slate-700">
+				<input
+					type="checkbox"
+					checked={confirmedMessage.isVisible}
+					disabled={updatingVisibility}
+					onchange={(e) => handleToggleVisibility(e.currentTarget.checked)}
+					class="h-4 w-4 rounded border-slate-300 text-rose-500 focus:ring-rose-400"
+				/>
+				Mostrar no mural de mensagens
+			</label>
+			<div class="flex justify-end">
+				<button
+					onclick={() => (confirmedMessage = null)}
+					class="rounded-lg bg-rose-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-600"
+				>
+					Fechar
 				</button>
 			</div>
 		</div>

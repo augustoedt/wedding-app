@@ -1,6 +1,12 @@
 import { query, command } from '$app/server';
 import * as v from 'valibot';
-import { getWedding, getGifts, lockGift, confirmRsvpByToken as apiConfirmRsvpByToken } from '$lib/server/api';
+import {
+	getWedding,
+	getGifts,
+	lockGift,
+	getMessages,
+	confirmRsvpByToken as apiConfirmRsvpByToken
+} from '$lib/server/api';
 
 export const fetchWedding = query(v.string(), async (slug) => {
 	return getWedding(slug);
@@ -22,12 +28,17 @@ export const lockGiftRemote = command(
 		slug: v.string(),
 		giftId: v.string(),
 		buyerName: v.string(),
-		buyerEmail: v.pipe(v.string(), v.email())
+		buyerEmail: v.pipe(v.string(), v.email()),
+		message: v.optional(v.string())
 	}),
-	async ({ slug, giftId, buyerName, buyerEmail }) => {
-		return lockGift(slug, giftId, { buyerName, buyerEmail });
+	async ({ slug, giftId, buyerName, buyerEmail, message }) => {
+		return lockGift(slug, giftId, { buyerName, buyerEmail, message });
 	}
 );
+
+export const fetchMessages = query(v.string(), async (slug) => {
+	return getMessages(slug);
+});
 
 export const confirmRsvpByToken = command(
 	v.object({

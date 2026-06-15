@@ -35,12 +35,12 @@ Todas as rotas abaixo usam o prefixo `/admin` e exigem sessão autenticada via `
 	- retorno `200`: `Wedding`
 	- erro comum: `404 { message: "Wedding not found" }`
 - `POST /admin/wedding`
-	- body aceito: `{ title: string; slug: string (^[a-z0-9-]+$); siteUrl?: string; inviteMessage?: string; date?: string; description?: string; coverImage?: string }`
+	- body aceito: `{ title: string; slug: string (^[a-z0-9-]+$); siteUrl?: string; inviteMessage?: string; date?: string; description?: string; coverImage?: string; venueName?: string; venueCep?: string; venueAddress?: string; venueNumber?: string; venueNeighborhood?: string; venueCity?: string; venueState?: string; venueTime?: string; venueImage?: string; dressCodeGuests?: string; dressCodeGroomsmen?: string; ogImage?: string }`
 	- retorno `201`: `Wedding`
 	- erros comuns: `409` para slug duplicado ou casamento já existente
 - `PUT /admin/wedding/:id`
 	- params: `{ id: string }`
-	- body aceito: `{ title?: string; slug?: string; siteUrl?: string | null; inviteMessage?: string | null; date?: string | null; description?: string | null; coverImage?: string | null; isPublished?: boolean }`
+	- body aceito: `{ title?: string; slug?: string; siteUrl?: string | null; inviteMessage?: string | null; date?: string | null; description?: string | null; coverImage?: string | null; venueName?: string | null; venueCep?: string | null; venueAddress?: string | null; venueNumber?: string | null; venueNeighborhood?: string | null; venueCity?: string | null; venueState?: string | null; venueTime?: string | null; venueImage?: string | null; dressCodeGuests?: string | null; dressCodeGroomsmen?: string | null; ogImage?: string | null; isPublished?: boolean }`
 	- retorno `200`: `Wedding`
 	- erros comuns: `403`, `404`, `409`
 
@@ -99,12 +99,24 @@ Todas as rotas abaixo usam o prefixo `/admin` e exigem sessão autenticada via `
 	- erro comum: `404 { message: "No wedding found" }`
 - `PUT /admin/payments/:id/confirm`
 	- params: `{ id: string }`
-	- retorno `200`: `{ id: string; status: "approved" }`
+	- retorno `200`: `{ id: string; status: "approved"; message: { id: string; senderName: string; message: string; isVisible: boolean } | null }`
 	- erros comuns:
 		- `404` — pagamento não encontrado
 		- `403` — pagamento pertence a outro casamento
 		- `409` — pagamento não está no status `pending_confirmation`
 	- efeito colateral: marca o presente como comprado definitivamente (`isActive = false, lockedAt = null`)
+	- efeito colateral: se o pagamento tiver um `message` (recado deixado pelo convidado ao travar o presente), cria um registro `GuestMessage` com `isVisible = true` e o retorna em `message`; se não houver `message`, retorna `message: null` e nenhum `GuestMessage` é criado
+
+### Mensagens
+
+- `GET /admin/messages`
+	- retorno `200`: `GuestMessage[]` — todas as mensagens do casamento, mais recentes primeiro
+	- erro comum: `404 { message: "No wedding found" }`
+- `PUT /admin/messages/:id/visibility`
+	- params: `{ id: string }`
+	- body aceito: `{ isVisible: boolean }`
+	- retorno `200`: `GuestMessage`
+	- erros comuns: `403`, `404`
 
 ### Imagens
 
@@ -132,7 +144,7 @@ Essas rotas usam o prefixo `/public` e não exigem autenticação.
 
 - `GET /public/weddings/:slug`
 	- params: `{ slug: string }`
-	- retorno `200`: dados públicos do casamento `{ id, title, date, description, coverImage }`
+	- retorno `200`: dados públicos do casamento `{ id, title, date, description, coverImage, venueName, venueCep, venueAddress, venueNumber, venueNeighborhood, venueCity, venueState, venueTime, venueImage, dressCodeGuests, dressCodeGroomsmen, ogImage }`
 	- erro comum: `404 { message: "Wedding not found" }`
 
 ### RSVP
@@ -156,15 +168,22 @@ Essas rotas usam o prefixo `/public` e não exigem autenticação.
 	- erro comum: `404 { message: "Wedding not found" }`
 - `POST /public/weddings/:slug/gifts/:giftId/lock`
 	- params: `{ slug: string; giftId: string }`
-	- body aceito: `{ buyerName: string; buyerEmail: string (formato e-mail) }`
+	- body aceito: `{ buyerName: string; buyerEmail: string (formato e-mail); message?: string }`
 	- retorno `201`: `{ paymentId: string; paymentType: "url" | "pix" | null; paymentValue: string | null }`
 	- comportamento:
 		- marca o presente como travado (`isActive = false, lockedAt = now()`)
-		- cria um registro `GiftPayment` com `status = "pending_confirmation"`
+		- cria um registro `GiftPayment` com `status = "pending_confirmation"`, guardando `message` como rascunho (se enviado)
 		- retorna o tipo e valor de pagamento para o front exibir o link ou QR code
 	- erros comuns:
 		- `404` — casamento não encontrado
 		- `409` — presente já travado ou comprado
+
+### Mensagens
+
+- `GET /public/weddings/:slug/messages`
+	- params: `{ slug: string }`
+	- retorno `200`: `{ senderName: string; message: string; createdAt: string }[]` — apenas mensagens com `isVisible = true`, mais recentes primeiro
+	- erro comum: `404 { message: "Wedding not found" }`
 
 ---
 
@@ -181,6 +200,8 @@ Admin vê o pagamento pendente em GET /admin/payments
     → confirma manualmente que o pagamento foi recebido
     → PUT /admin/payments/:id/confirm
     → pagamento fica approved, presente fica isActive=false, lockedAt=null (comprado)
+    → se o pagamento tinha message, cria GuestMessage (isVisible=true) e retorna em message
+    → admin pode ocultar/mostrar a mensagem no mural via PUT /admin/messages/:id/visibility
 
 Se o admin não confirmar em até 24h:
     → cron roda a cada hora
@@ -208,10 +229,11 @@ Se o admin não confirmar em até 24h:
 
 ## Tipos de entidade
 
-- `Wedding`: `{ id, userId, title, slug, siteUrl, inviteMessage, date, description, coverImage, isPublished, createdAt, updatedAt }`
+- `Wedding`: `{ id, userId, title, slug, siteUrl, inviteMessage, date, description, coverImage, venueName, venueCep, venueAddress, venueNumber, venueNeighborhood, venueCity, venueState, venueTime, venueImage, dressCodeGuests, dressCodeGroomsmen, ogImage, isPublished, createdAt, updatedAt }` (campos de local, dress code e OG são `string | null`)
 - `Guest`: `{ id, weddingId, name, email, phone, rsvp, plusOne: number, inviteSent: boolean, rsvpToken, createdAt, updatedAt }`
 - `Gift`: `{ id, weddingId, name, description, price, imageUrl, paymentType, paymentValue, isActive, lockedAt, createdAt, updatedAt }`
-- `GiftPayment`: `{ id, giftId, weddingId, buyerName, buyerEmail, amount, status, createdAt, updatedAt }`
+- `GiftPayment`: `{ id, giftId, weddingId, buyerName, buyerEmail, amount, status, message: string | null, createdAt, updatedAt }`
+- `GuestMessage`: `{ id, weddingId, paymentId, senderName, message, isVisible, createdAt, updatedAt }`
 - `Image`: `{ id, weddingId, url, description, createdAt }`
 
 ## Pagamento nos presentes

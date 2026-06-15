@@ -47,6 +47,15 @@ export function createPublicRoutes({
       { params: giftLockParams, body: lockGiftBody }
     )
     .get(
+      "/weddings/:slug/messages",
+      async ({ params, status }) => {
+        const result = await service.listMessages(params.slug)
+        if ("error" in result) return status(404, { message: "Wedding not found" })
+        return (result as { data: unknown }).data
+      },
+      { params: slugParams }
+    )
+    .get(
       "/rsvp/:token",
       async ({ params, status }) => {
         const result = await guestsService.getGuestByToken(params.token)
