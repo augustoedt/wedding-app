@@ -101,12 +101,14 @@ async function seedGift({
   id,
   weddingId,
   active = true,
-  lockedAt = null
+  lockedAt = null,
+  paymentType = null
 }: {
   id: string
   weddingId: string
   active?: boolean
   lockedAt?: Date | null
+  paymentType?: string | null
 }) {
   await testDb.insert(gifts).values({
     id,
@@ -115,8 +117,8 @@ async function seedGift({
     description: null,
     price: 1000,
     imageUrl: null,
-    paymentType: null,
-    paymentValue: null,
+    paymentType,
+    paymentValue: paymentType ? "value" : null,
     isActive: active,
     lockedAt,
     createdAt: now,
@@ -996,6 +998,60 @@ describe("routes integration", () => {
     const body = await res.json()
     expect(body.paymentType).toBe("url")
     expect(body.paymentValue).toBe("https://loja.com/fritadeira")
+  })
+
+  it("public gift listing excludes gifts without a payment method from items and total", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-1")
+    await seedWedding({
+      id: "w-purchasable",
+      userId: "u-1",
+      slug: "purchasable-slug",
+      published: true
+    })
+    await seedGift({
+      id: "g-buyable-1",
+      weddingId: "w-purchasable",
+      paymentType: "pix"
+    })
+    await seedGift({
+      id: "g-buyable-2",
+      weddingId: "w-purchasable",
+      paymentType: "url"
+    })
+    await seedGift({
+      id: "g-draft-1",
+      weddingId: "w-purchasable",
+      paymentType: null
+    })
+    await seedGift({
+      id: "g-draft-2",
+      weddingId: "w-purchasable",
+      paymentType: null
+    })
+
+    const app = new Elysia().use(
+      createPublicRoutes({
+        service: createPublicService(testDb),
+        guestsService: createGuestsService(testDb)
+      })
+    )
+
+    const res = await app.handle(
+      new Request(
+        "http://localhost/public/weddings/purchasable-slug/gifts?limit=20"
+      )
+    )
+    expect(res.status).toBe(200)
+    const body = await res.json()
+
+    expect(body.total).toBe(2)
+    expect(body.items).toHaveLength(2)
+    expect(body.items.map((g: { id: string }) => g.id).sort()).toEqual([
+      "g-buyable-1",
+      "g-buyable-2"
+    ])
   })
 
   it("handles public wedding and RSVP flow", async () => {

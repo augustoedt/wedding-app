@@ -12,7 +12,7 @@
 	let { data } = $props();
 	const wedding = untrack(() => data.wedding);
 	const giftsPage = untrack(() => data.giftsPage);
-	let gifts = $state<Gift[]>(giftsPage.items.filter((g) => g.paymentType !== null));
+	let gifts = $state<Gift[]>(giftsPage.items);
 	let total = $state(giftsPage.total);
 	let currentPage = $state(1);
 	let loadingMore = $state(false);
@@ -27,7 +27,7 @@
 				page: currentPage + 1,
 				limit: LIMIT
 			});
-			gifts = [...gifts, ...result.items.filter((g) => g.paymentType !== null)];
+			gifts = [...gifts, ...result.items];
 			currentPage += 1;
 		} finally {
 			loadingMore = false;

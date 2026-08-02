@@ -1,4 +1,4 @@
-import { and, asc, count, eq } from "drizzle-orm"
+import { and, asc, count, eq, isNotNull } from "drizzle-orm"
 import type { Database } from "../../db"
 import { galleries, gifts, images, weddings } from "../../db/schema"
 
@@ -14,18 +14,19 @@ export function createPublicRepository(database: Database) {
     },
 
     async findGiftsByWeddingId(weddingId: string, page: number, limit: number) {
+      const purchasable = and(
+        eq(gifts.weddingId, weddingId),
+        isNotNull(gifts.paymentType)
+      )
       const [items, [{ total }]] = await Promise.all([
         database
           .select()
           .from(gifts)
-          .where(eq(gifts.weddingId, weddingId))
+          .where(purchasable)
           .orderBy(asc(gifts.sortOrder), asc(gifts.id))
           .limit(limit)
           .offset((page - 1) * limit),
-        database
-          .select({ total: count() })
-          .from(gifts)
-          .where(eq(gifts.weddingId, weddingId))
+        database.select({ total: count() }).from(gifts).where(purchasable)
       ])
       return { items, total }
     },
