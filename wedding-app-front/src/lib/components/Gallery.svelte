@@ -60,25 +60,35 @@
 		aria-modal="true"
 		aria-label={gallery.title}
 		tabindex="-1"
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-6"
+		class="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/70 p-6"
 		onclick={close}
 		onkeydown={onKeydown}
 	>
-		<button
-			onclick={close}
-			aria-label="Fechar"
-			class="absolute top-6 right-6 text-white/70 transition hover:text-white"
+		<div
+			role="presentation"
+			class="relative max-h-[80vh] max-w-2xl overflow-hidden rounded-2xl bg-stone-900 shadow-2xl"
+			onclick={(e) => e.stopPropagation()}
 		>
-			<svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-				<path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" />
-			</svg>
-		</button>
+			<button
+				onclick={close}
+				aria-label="Fechar"
+				class="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white/80 transition hover:bg-black/60 hover:text-white"
+			>
+				<svg
+					class="h-5 w-5"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="1.5"
+				>
+					<path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" />
+				</svg>
+			</button>
 
-		<div role="presentation" onclick={(e) => e.stopPropagation()}>
 			<img
 				src={selectedImage.url}
 				alt={selectedImage.description ?? gallery.title}
-				class="max-h-full max-w-full rounded-lg object-contain"
+				class="max-h-[80vh] max-w-full object-contain"
 			/>
 		</div>
 	</div>
