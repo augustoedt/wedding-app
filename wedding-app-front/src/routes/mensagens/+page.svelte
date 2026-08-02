@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { fetchWedding, fetchMessages } from '$lib/wedding.remote';
-	import { PUBLIC_WEDDING_SLUG } from '$env/static/public';
+	import { untrack } from 'svelte';
 	import WeddingLayout from '$lib/components/WeddingLayout.svelte';
 
-	const wedding = await fetchWedding(PUBLIC_WEDDING_SLUG);
-	const messages = await fetchMessages(PUBLIC_WEDDING_SLUG);
+	let { data } = $props();
+	const wedding = untrack(() => data.wedding);
+	const messages = untrack(() => data.messages);
 
 	function formatDate(value: string) {
 		return new Date(value).toLocaleDateString('pt-BR', {

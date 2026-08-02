@@ -1,16 +1,10 @@
 import { query, command } from '$app/server';
 import * as v from 'valibot';
 import {
-	getWedding,
 	getGifts,
 	lockGift,
-	getMessages,
 	confirmRsvpByToken as apiConfirmRsvpByToken
 } from '$lib/server/api';
-
-export const fetchWedding = query(v.string(), async (slug) => {
-	return getWedding(slug);
-});
 
 export const fetchGifts = query(
 	v.object({
@@ -35,10 +29,6 @@ export const lockGiftRemote = command(
 		return lockGift(slug, giftId, { buyerName, buyerEmail, message });
 	}
 );
-
-export const fetchMessages = query(v.string(), async (slug) => {
-	return getMessages(slug);
-});
 
 export const confirmRsvpByToken = command(
 	v.object({

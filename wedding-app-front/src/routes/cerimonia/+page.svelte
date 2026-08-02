@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { fetchWedding } from '$lib/wedding.remote';
-	import { PUBLIC_WEDDING_SLUG } from '$env/static/public';
+	import { untrack } from 'svelte';
 	import WeddingLayout from '$lib/components/WeddingLayout.svelte';
 	import type { Wedding } from '$lib/api';
 
-	const wedding = await fetchWedding(PUBLIC_WEDDING_SLUG);
+	let { data } = $props();
+	const wedding = untrack(() => data.wedding);
 
 	function addressLines(w: Wedding): string[] {
 		const street = [w.venueAddress, w.venueNumber].filter(Boolean).join(', ');

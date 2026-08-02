@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { fetchWedding, fetchGifts } from '$lib/wedding.remote';
+	import { untrack } from 'svelte';
+	import { fetchGifts } from '$lib/wedding.remote';
 	import { PUBLIC_WEDDING_SLUG } from '$env/static/public';
 	import type { Gift } from '$lib/server/api';
 	import WeddingLayout from '$lib/components/WeddingLayout.svelte';
@@ -8,10 +9,11 @@
 
 	const LIMIT = 20;
 
-	const wedding = await fetchWedding(PUBLIC_WEDDING_SLUG);
-	const initialResult = await fetchGifts({ slug: PUBLIC_WEDDING_SLUG, page: 1, limit: LIMIT });
-	let gifts = $state<Gift[]>(initialResult.items.filter((g) => g.paymentType !== null));
-	let total = $state(initialResult.total);
+	let { data } = $props();
+	const wedding = untrack(() => data.wedding);
+	const giftsPage = untrack(() => data.giftsPage);
+	let gifts = $state<Gift[]>(giftsPage.items.filter((g) => g.paymentType !== null));
+	let total = $state(giftsPage.total);
 	let currentPage = $state(1);
 	let loadingMore = $state(false);
 

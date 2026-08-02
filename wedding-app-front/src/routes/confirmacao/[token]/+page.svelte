@@ -1,15 +1,13 @@
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
-	import { PUBLIC_WEDDING_SLUG } from '$env/static/public';
-	import { fetchWedding, confirmRsvpByToken } from '$lib/wedding.remote';
+	import { confirmRsvpByToken } from '$lib/wedding.remote';
 	import { saveToken } from '$lib/rsvp-store';
 	import WeddingLayout from '$lib/components/WeddingLayout.svelte';
 	import type { Guest } from '$lib/server/api';
 
 	let { data } = $props();
 	const token = untrack(() => data.token);
-
-	const wedding = await fetchWedding(PUBLIC_WEDDING_SLUG);
+	const wedding = untrack(() => data.wedding);
 
 	onMount(() => {
 		saveToken(token);
