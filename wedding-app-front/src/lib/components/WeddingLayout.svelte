@@ -16,7 +16,7 @@
 </script>
 
 <div class="flex min-h-screen flex-col font-sans">
-	<Header {wedding} {dark} />
+	<Header {dark} />
 	{@render children()}
 	<Footer title={wedding.title} />
 </div>

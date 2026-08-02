@@ -1,10 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import type { Wedding } from '$lib/api';
 	import { resolve } from '$app/paths';
 	import { getToken } from '$lib/rsvp-store';
 
-	let { wedding, dark = false }: { wedding: Wedding; dark?: boolean } = $props();
+	let { dark = false }: { dark?: boolean } = $props();
 
 	let rsvpToken = $state<string | null>(null);
 	onMount(() => {
@@ -22,12 +21,6 @@
 		{ label: 'Cerimônia & Festa', href: '/cerimonia' },
 		{ label: 'Mensagens', href: '/mensagens' }
 	];
-
-	function coupleInitials(title: string) {
-		const parts = title.split(/[\s&eE]+/).filter(Boolean);
-		if (parts.length >= 2) return `${parts[0][0]} & ${parts[parts.length - 1][0]}`;
-		return title;
-	}
 </script>
 
 <svelte:window bind:scrollY />
@@ -38,17 +31,7 @@
 	class:shadow-sm={isScrolled}
 	class:bg-transparent={!isScrolled}
 >
-	<div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-		<!-- Couple initials -->
-		<a
-			href={resolve('/')}
-			class="font-serif text-2xl font-light tracking-widest transition-colors"
-			class:text-white={!isScrolled}
-			class:text-stone-800={isScrolled}
-		>
-			{coupleInitials(wedding.title)}
-		</a>
-
+	<div class="mx-auto flex max-w-6xl items-center justify-end px-6 py-4">
 		<!-- Desktop nav -->
 		<nav class="hidden items-center gap-8 md:flex">
 			<div class="relative">

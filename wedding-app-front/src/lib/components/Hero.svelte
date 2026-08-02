@@ -14,7 +14,7 @@
 	}
 </script>
 
-<section class="relative flex h-screen w-full items-center justify-center overflow-hidden">
+<section class="relative flex h-screen w-full items-start justify-center overflow-hidden pt-28 md:pt-36">
 	{#if wedding.coverImage}
 		<img
 			src={wedding.coverImage}
