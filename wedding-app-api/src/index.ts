@@ -4,6 +4,8 @@ import { Elysia } from "elysia"
 import { db } from "./db"
 import { auth } from "./lib/auth"
 import { authGuard } from "./lib/auth-guard"
+import { createGalleriesRoutes } from "./modules/galleries"
+import { createGalleriesService } from "./modules/galleries/service"
 import { createGiftsRepository } from "./modules/gifts/repository"
 import { createGiftsRoutes } from "./modules/gifts"
 import { createGiftsService } from "./modules/gifts/service"
@@ -40,8 +42,10 @@ async function expireGiftLocks() {
 const app = new Elysia()
   .use(
     cors({
-      origin: process.env.ALLOWED_ORIGINS?.split(",") ?? ["http://localhost:5173"],
-      credentials: true,
+      origin: process.env.ALLOWED_ORIGINS?.split(",") ?? [
+        "http://localhost:5173"
+      ],
+      credentials: true
     })
   )
   .onError(({ code, error, path, request }) => {
@@ -51,47 +55,58 @@ const app = new Elysia()
     cron({
       name: "expireGiftLocks",
       pattern: Patterns.everyHours(1),
-      run: expireGiftLocks,
+      run: expireGiftLocks
     })
   )
   .mount(auth.handler)
   .use(
     createWeddingsRoutes({
       service: createWeddingsService(db),
-      guard: authGuard,
+      guard: authGuard
     })
   )
   .use(
     createGuestsRoutes({
       service: createGuestsService(db),
-      guard: authGuard,
+      guard: authGuard
     })
   )
   .use(
     createGiftsRoutes({
       service: createGiftsService(db),
-      guard: authGuard,
+      guard: authGuard
     })
   )
   .use(
     createPaymentsRoutes({
       service: createPaymentsService(db),
-      guard: authGuard,
+      guard: authGuard
     })
   )
   .use(
     createImagesRoutes({
       service: createImagesService(db),
-      guard: authGuard,
+      guard: authGuard
+    })
+  )
+  .use(
+    createGalleriesRoutes({
+      service: createGalleriesService(db),
+      guard: authGuard
     })
   )
   .use(
     createMessagesRoutes({
       service: createMessagesService(db),
-      guard: authGuard,
+      guard: authGuard
     })
   )
-  .use(createPublicRoutes({ service: createPublicService(db), guestsService: createGuestsService(db) }))
+  .use(
+    createPublicRoutes({
+      service: createPublicService(db),
+      guestsService: createGuestsService(db)
+    })
+  )
   .listen(process.env.PORT ?? 3000)
 
 console.log(`API running at ${app.server?.hostname}:${app.server?.port}`)

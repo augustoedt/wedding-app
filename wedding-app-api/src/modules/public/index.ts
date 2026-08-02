@@ -1,11 +1,18 @@
 import { Elysia } from "elysia"
 import type { createGuestsService } from "../guests/service"
 import type { createPublicService } from "./service"
-import { giftLockParams, giftsQuery, lockGiftBody, rsvpTokenBody, rsvpTokenParams, slugParams } from "./model"
+import {
+  giftLockParams,
+  giftsQuery,
+  lockGiftBody,
+  rsvpTokenBody,
+  rsvpTokenParams,
+  slugParams
+} from "./model"
 
 export function createPublicRoutes({
   service,
-  guestsService,
+  guestsService
 }: {
   service: ReturnType<typeof createPublicService>
   guestsService: ReturnType<typeof createGuestsService>
@@ -15,7 +22,8 @@ export function createPublicRoutes({
       "/weddings/:slug",
       async ({ params, status }) => {
         const result = await service.getWedding(params.slug)
-        if ("error" in result) return status(404, { message: "Wedding not found" })
+        if ("error" in result)
+          return status(404, { message: "Wedding not found" })
         return (result as { data: unknown }).data
       },
       { params: slugParams }
@@ -26,7 +34,8 @@ export function createPublicRoutes({
         const page = query.page ?? 1
         const limit = query.limit ?? 20
         const result = await service.listGifts(params.slug, page, limit)
-        if ("error" in result) return status(404, { message: "Wedding not found" })
+        if ("error" in result)
+          return status(404, { message: "Wedding not found" })
         return (result as { data: unknown }).data
       },
       { params: slugParams, query: giftsQuery }
@@ -36,21 +45,37 @@ export function createPublicRoutes({
       async ({ params, body, status }) => {
         const result = await service.lockGift(params.slug, params.giftId, body)
         if ("error" in result) {
-          if (result.error === "not_found") return status(404, { message: "Wedding not found" })
-          if (result.error === "unavailable") return status(409, { message: "Gift is not available" })
+          if (result.error === "not_found")
+            return status(404, { message: "Wedding not found" })
+          if (result.error === "unavailable")
+            return status(409, { message: "Gift is not available" })
         }
-        return new Response(JSON.stringify((result as { data: unknown }).data), {
-          status: 201,
-          headers: { "content-type": "application/json" },
-        })
+        return new Response(
+          JSON.stringify((result as { data: unknown }).data),
+          {
+            status: 201,
+            headers: { "content-type": "application/json" }
+          }
+        )
       },
       { params: giftLockParams, body: lockGiftBody }
+    )
+    .get(
+      "/weddings/:slug/galleries",
+      async ({ params, status }) => {
+        const result = await service.listGalleries(params.slug)
+        if ("error" in result)
+          return status(404, { message: "Wedding not found" })
+        return (result as { data: unknown }).data
+      },
+      { params: slugParams }
     )
     .get(
       "/weddings/:slug/messages",
       async ({ params, status }) => {
         const result = await service.listMessages(params.slug)
-        if ("error" in result) return status(404, { message: "Wedding not found" })
+        if ("error" in result)
+          return status(404, { message: "Wedding not found" })
         return (result as { data: unknown }).data
       },
       { params: slugParams }
@@ -59,7 +84,8 @@ export function createPublicRoutes({
       "/rsvp/:token",
       async ({ params, status }) => {
         const result = await guestsService.getGuestByToken(params.token)
-        if ("error" in result) return status(404, { message: "Invalid or expired RSVP link" })
+        if ("error" in result)
+          return status(404, { message: "Invalid or expired RSVP link" })
         return (result as { data: unknown }).data
       },
       { params: rsvpTokenParams }
@@ -67,11 +93,15 @@ export function createPublicRoutes({
     .post(
       "/rsvp/:token",
       async ({ params, body, status }) => {
-        const result = await guestsService.confirmRsvpByToken(params.token, body.rsvp, body.companions)
+        const result = await guestsService.confirmRsvpByToken(
+          params.token,
+          body.rsvp,
+          body.companions
+        )
         if ("error" in result) {
           if (result.error === "companions_over_limit") {
             return status(422, {
-              message: `Você pode confirmar no máximo ${result.allowed} acompanhante(s).`,
+              message: `Você pode confirmar no máximo ${result.allowed} acompanhante(s).`
             })
           }
           return status(404, { message: "Invalid or expired RSVP link" })

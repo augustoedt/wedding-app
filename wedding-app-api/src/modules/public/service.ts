@@ -32,15 +32,19 @@ export function createPublicService(database: Database) {
           venueImage: wedding.venueImage,
           dressCodeGuests: wedding.dressCodeGuests,
           dressCodeGroomsmen: wedding.dressCodeGroomsmen,
-          ogImage: wedding.ogImage,
-        },
+          ogImage: wedding.ogImage
+        }
       }
     },
 
     async listGifts(slug: string, page: number, limit: number) {
       const wedding = await repo.findWeddingBySlug(slug)
       if (!wedding) return { error: "not_found" as const }
-      const { items, total } = await repo.findGiftsByWeddingId(wedding.id, page, limit)
+      const { items, total } = await repo.findGiftsByWeddingId(
+        wedding.id,
+        page,
+        limit
+      )
       return { data: { items, total, page, limit } }
     },
 
@@ -64,16 +68,22 @@ export function createPublicService(database: Database) {
         buyerEmail: data.buyerEmail,
         amount: gift.price,
         status: "pending_confirmation",
-        message: data.message,
+        message: data.message
       })
 
       return {
         data: {
           paymentId: payment.id,
           paymentType: gift.paymentType,
-          paymentValue: gift.paymentValue,
-        },
+          paymentValue: gift.paymentValue
+        }
       }
+    },
+
+    async listGalleries(slug: string) {
+      const wedding = await repo.findWeddingBySlug(slug)
+      if (!wedding) return { error: "not_found" as const }
+      return { data: await repo.findGalleriesByWeddingId(wedding.id) }
     },
 
     async listMessages(slug: string) {
@@ -85,9 +95,9 @@ export function createPublicService(database: Database) {
         data: messages.map((m) => ({
           senderName: m.senderName,
           message: m.message,
-          createdAt: m.createdAt,
-        })),
+          createdAt: m.createdAt
+        }))
       }
-    },
+    }
   }
 }

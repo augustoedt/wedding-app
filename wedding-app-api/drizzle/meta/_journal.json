@@ -64,6 +64,13 @@
       "when": 1785703248740,
       "tag": "0008_add_gifts_sort_order",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1785707349041,
+      "tag": "0009_add_galleries",
+      "breakpoints": true
     }
   ]
 }

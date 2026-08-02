@@ -3,17 +3,23 @@ import { Elysia } from "elysia"
 import { eq } from "drizzle-orm"
 import { authGuard } from "../src/lib/auth-guard"
 import {
+  galleries,
   giftPayments,
   guestMessages,
   guests,
   gifts,
+  images,
   user,
-  weddings,
+  weddings
 } from "../src/db/schema"
+import { createGalleriesRoutes } from "../src/modules/galleries"
+import { createGalleriesService } from "../src/modules/galleries/service"
 import { createGiftsRoutes } from "../src/modules/gifts"
 import { createGiftsService } from "../src/modules/gifts/service"
 import { createGuestsRoutes } from "../src/modules/guests"
 import { createGuestsService } from "../src/modules/guests/service"
+import { createImagesRoutes } from "../src/modules/images"
+import { createImagesService } from "../src/modules/images/service"
 import { createMessagesRoutes } from "../src/modules/messages"
 import { createMessagesService } from "../src/modules/messages/service"
 import { createPaymentsRoutes } from "../src/modules/payments"
@@ -26,7 +32,7 @@ import {
   closeTestDatabase,
   resetTestDatabase,
   setupTestDatabase,
-  testDb,
+  testDb
 } from "./helpers/test-db"
 
 const now = new Date()
@@ -38,10 +44,10 @@ function createAuthenticatedGuard(userId: string) {
     () => ({
       session: {
         user: {
-          id: userId,
-        },
-      },
-    }),
+          id: userId
+        }
+      }
+    })
   )
 }
 
@@ -49,9 +55,9 @@ function jsonRequest(url: string, method: string, body: unknown) {
   return new Request(url, {
     method,
     headers: {
-      "content-type": "application/json",
+      "content-type": "application/json"
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify(body)
   })
 }
 
@@ -62,7 +68,7 @@ async function seedUser(id: string) {
     email: `${id}@example.com`,
     emailVerified: true,
     createdAt: now,
-    updatedAt: now,
+    updatedAt: now
   })
 }
 
@@ -70,7 +76,7 @@ async function seedWedding({
   id,
   userId,
   slug,
-  published = false,
+  published = false
 }: {
   id: string
   userId: string
@@ -87,7 +93,7 @@ async function seedWedding({
     coverImage: null,
     isPublished: published,
     createdAt: now,
-    updatedAt: now,
+    updatedAt: now
   })
 }
 
@@ -95,7 +101,7 @@ async function seedGift({
   id,
   weddingId,
   active = true,
-  lockedAt = null,
+  lockedAt = null
 }: {
   id: string
   weddingId: string
@@ -114,7 +120,7 @@ async function seedGift({
     isActive: active,
     lockedAt,
     createdAt: now,
-    updatedAt: now,
+    updatedAt: now
   })
 }
 
@@ -123,7 +129,7 @@ async function seedGiftPayment({
   giftId,
   weddingId,
   status = "pending_confirmation",
-  message,
+  message
 }: {
   id: string
   giftId: string
@@ -141,7 +147,50 @@ async function seedGiftPayment({
     status,
     message,
     createdAt: now,
-    updatedAt: now,
+    updatedAt: now
+  })
+}
+
+async function seedGallery({
+  id,
+  weddingId,
+  title = `Gallery ${id}`,
+  sortOrder = 1000
+}: {
+  id: string
+  weddingId: string
+  title?: string
+  sortOrder?: number
+}) {
+  await testDb.insert(galleries).values({
+    id,
+    weddingId,
+    title,
+    sortOrder,
+    createdAt: now,
+    updatedAt: now
+  })
+}
+
+async function seedImage({
+  id,
+  weddingId,
+  galleryId = null,
+  sortOrder = 1000
+}: {
+  id: string
+  weddingId: string
+  galleryId?: string | null
+  sortOrder?: number
+}) {
+  await testDb.insert(images).values({
+    id,
+    weddingId,
+    galleryId,
+    url: `https://cdn.example.com/${id}.jpg`,
+    description: null,
+    sortOrder,
+    createdAt: now
   })
 }
 
@@ -151,7 +200,7 @@ async function seedGuestMessage({
   paymentId,
   senderName = "Buyer",
   message = "Parabéns!",
-  isVisible = true,
+  isVisible = true
 }: {
   id: string
   weddingId: string
@@ -168,7 +217,7 @@ async function seedGuestMessage({
     message,
     isVisible,
     createdAt: now,
-    updatedAt: now,
+    updatedAt: now
   })
 }
 
@@ -179,7 +228,7 @@ beforeAll(async () => {
   } catch (error) {
     console.warn(
       "Skipping db.integration.test.ts because test database is unavailable:",
-      error,
+      error
     )
   }
 })
@@ -205,7 +254,7 @@ describe("service integration", () => {
     const service = createWeddingsService(testDb)
     const result = await service.createWedding("u-1", {
       title: "My wedding",
-      slug: "same-slug",
+      slug: "same-slug"
     })
 
     expect(result).toEqual({ error: "slug_taken" })
@@ -236,12 +285,12 @@ describe("service integration", () => {
       name: "Churraqueira",
       price: 80000,
       paymentType: "pix",
-      paymentValue: "contato@email.com",
+      paymentValue: "contato@email.com"
     })
 
     expect("data" in result && result.data.paymentType).toBe("pix")
     expect("data" in result && result.data.paymentValue).toBe(
-      "contato@email.com",
+      "contato@email.com"
     )
   })
 
@@ -254,7 +303,7 @@ describe("service integration", () => {
 
     const service = createGiftsService(testDb)
     const result = await service.updateGift("u-1", "g-1", {
-      status: "purchased",
+      status: "purchased"
     })
 
     expect("data" in result && result.data?.isActive).toBe(false)
@@ -270,13 +319,13 @@ describe("service integration", () => {
       id: "g-1",
       weddingId: "w-1",
       active: false,
-      lockedAt: now,
+      lockedAt: now
     })
     await seedGiftPayment({ id: "p-1", giftId: "g-1", weddingId: "w-1" })
 
     const service = createGiftsService(testDb)
     const result = await service.updateGift("u-1", "g-1", {
-      status: "available",
+      status: "available"
     })
 
     expect("data" in result && result.data?.isActive).toBe(true)
@@ -298,15 +347,15 @@ describe("service integration", () => {
     const service = createGiftsService(testDb)
     const first = await service.createGift("u-1", {
       name: "Primeiro",
-      price: 1000,
+      price: 1000
     })
     const second = await service.createGift("u-1", {
       name: "Segundo",
-      price: 1000,
+      price: 1000
     })
     const third = await service.createGift("u-1", {
       name: "Terceiro",
-      price: 1000,
+      price: 1000
     })
 
     expect("data" in first && first.data?.sortOrder).toBe(1000)
@@ -317,7 +366,7 @@ describe("service integration", () => {
     expect("data" in list && list.data?.map((g) => g.name)).toEqual([
       "Primeiro",
       "Segundo",
-      "Terceiro",
+      "Terceiro"
     ])
   })
 
@@ -347,15 +396,15 @@ describe("service integration", () => {
     const service = createGiftsService(testDb)
     const first = await service.createGift("u-1", {
       name: "Primeiro",
-      price: 1000,
+      price: 1000
     })
     const second = await service.createGift("u-1", {
       name: "Segundo",
-      price: 1000,
+      price: 1000
     })
     const third = await service.createGift("u-1", {
       name: "Terceiro",
-      price: 1000,
+      price: 1000
     })
     const firstId = "data" in first && first.data ? first.data.id : ""
     const secondId = "data" in second && second.data ? second.data.id : ""
@@ -364,12 +413,12 @@ describe("service integration", () => {
     // Move "Terceiro" between "Primeiro" and "Segundo".
     const moved = await service.reorderGift("u-1", thirdId, {
       afterId: firstId,
-      beforeId: secondId,
+      beforeId: secondId
     })
     expect("data" in moved && moved.data?.map((g) => g.name)).toEqual([
       "Primeiro",
       "Terceiro",
-      "Segundo",
+      "Segundo"
     ])
   })
 
@@ -382,29 +431,29 @@ describe("service integration", () => {
     const service = createGiftsService(testDb)
     const first = await service.createGift("u-1", {
       name: "Primeiro",
-      price: 1000,
+      price: 1000
     })
     const second = await service.createGift("u-1", {
       name: "Segundo",
-      price: 1000,
+      price: 1000
     })
     const secondId = "data" in second && second.data ? second.data.id : ""
     const firstId = "data" in first && first.data ? first.data.id : ""
 
     const toStart = await service.reorderGift("u-1", secondId, {
-      afterId: firstId,
+      afterId: firstId
     })
     expect("data" in toStart && toStart.data?.map((g) => g.name)).toEqual([
       "Segundo",
-      "Primeiro",
+      "Primeiro"
     ])
 
     const toEnd = await service.reorderGift("u-1", secondId, {
-      beforeId: firstId,
+      beforeId: firstId
     })
     expect("data" in toEnd && toEnd.data?.map((g) => g.name)).toEqual([
       "Primeiro",
-      "Segundo",
+      "Segundo"
     ])
   })
 
@@ -415,7 +464,7 @@ describe("service integration", () => {
     await seedWedding({
       id: "w-1",
       userId: "u-1",
-      slug: "slug-reorder-renumber",
+      slug: "slug-reorder-renumber"
     })
     await seedGift({ id: "g-a", weddingId: "w-1" })
     await seedGift({ id: "g-b", weddingId: "w-1" })
@@ -437,13 +486,13 @@ describe("service integration", () => {
     const service = createGiftsService(testDb)
     const result = await service.reorderGift("u-1", "g-c", {
       afterId: "g-a",
-      beforeId: "g-b",
+      beforeId: "g-b"
     })
 
     expect("data" in result && result.data?.map((g) => g.id)).toEqual([
       "g-a",
       "g-c",
-      "g-b",
+      "g-b"
     ])
 
     const rows = await testDb
@@ -462,14 +511,14 @@ describe("service integration", () => {
     await seedWedding({
       id: "w-1",
       userId: "u-owner",
-      slug: "slug-reorder-forbidden",
+      slug: "slug-reorder-forbidden"
     })
     await seedGift({ id: "g-1", weddingId: "w-1" })
     await seedGift({ id: "g-2", weddingId: "w-1" })
 
     const service = createGiftsService(testDb)
     const result = await service.reorderGift("u-other", "g-1", {
-      afterId: "g-2",
+      afterId: "g-2"
     })
 
     expect(result).toEqual({ error: "forbidden" })
@@ -483,22 +532,293 @@ describe("service integration", () => {
     await seedWedding({
       id: "w-1",
       userId: "u-1",
-      slug: "slug-reorder-cross-a",
+      slug: "slug-reorder-cross-a"
     })
     await seedWedding({
       id: "w-2",
       userId: "u-2",
-      slug: "slug-reorder-cross-b",
+      slug: "slug-reorder-cross-b"
     })
     await seedGift({ id: "g-mine", weddingId: "w-1" })
     await seedGift({ id: "g-other", weddingId: "w-2" })
 
     const service = createGiftsService(testDb)
     const result = await service.reorderGift("u-1", "g-mine", {
-      afterId: "g-other",
+      afterId: "g-other"
     })
 
     expect(result).toEqual({ error: "forbidden" })
+  })
+})
+
+describe("galleries integration", () => {
+  it("creates galleries with increasing sortOrder and lists them in order", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-1")
+    await seedWedding({ id: "w-1", userId: "u-1", slug: "gallery-slug-1" })
+
+    const service = createGalleriesService(testDb)
+    const first = await service.createGallery("u-1", "Cerimônia")
+    const second = await service.createGallery("u-1", "Festa")
+
+    expect("data" in first && first.data?.sortOrder).toBe(1000)
+    expect("data" in second && second.data?.sortOrder).toBe(2000)
+
+    const list = await service.listGalleries("u-1")
+    expect("data" in list && list.data?.map((g) => g.title)).toEqual([
+      "Cerimônia",
+      "Festa"
+    ])
+  })
+
+  it("blocks updating and deleting a gallery owned by another user", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-owner")
+    await seedUser("u-other")
+    await seedWedding({
+      id: "w-1",
+      userId: "u-owner",
+      slug: "gallery-owner-slug"
+    })
+    await seedGallery({ id: "gal-1", weddingId: "w-1" })
+
+    const service = createGalleriesService(testDb)
+    expect(
+      await service.updateGallery("u-other", "gal-1", { title: "Hack" })
+    ).toEqual({
+      error: "forbidden"
+    })
+    expect(await service.deleteGallery("u-other", "gal-1")).toEqual({
+      error: "forbidden"
+    })
+  })
+
+  it("reorders galleries via beforeId/afterId", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-1")
+    await seedWedding({
+      id: "w-1",
+      userId: "u-1",
+      slug: "gallery-reorder-slug"
+    })
+
+    const service = createGalleriesService(testDb)
+    const first = await service.createGallery("u-1", "Primeira")
+    const second = await service.createGallery("u-1", "Segunda")
+    const firstId = "data" in first && first.data ? first.data.id : ""
+    const secondId = "data" in second && second.data ? second.data.id : ""
+
+    const moved = await service.reorderGallery("u-1", secondId, {
+      afterId: firstId
+    })
+    expect("data" in moved && moved.data?.map((g) => g.title)).toEqual([
+      "Segunda",
+      "Primeira"
+    ])
+  })
+
+  it("assigns an image to a gallery, appending it to the end", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-1")
+    await seedWedding({ id: "w-1", userId: "u-1", slug: "img-gallery-slug" })
+    await seedGallery({ id: "gal-1", weddingId: "w-1" })
+    await seedImage({
+      id: "img-1",
+      weddingId: "w-1",
+      galleryId: "gal-1",
+      sortOrder: 1000
+    })
+    await seedImage({ id: "img-2", weddingId: "w-1", galleryId: null })
+
+    const service = createImagesService(testDb)
+    const result = await service.updateImage("u-1", "img-2", {
+      galleryId: "gal-1"
+    })
+
+    expect("data" in result && result.data?.galleryId).toBe("gal-1")
+    expect("data" in result && result.data?.sortOrder).toBe(2000)
+  })
+
+  it("removes an image from its gallery", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-1")
+    await seedWedding({ id: "w-1", userId: "u-1", slug: "img-remove-slug" })
+    await seedGallery({ id: "gal-1", weddingId: "w-1" })
+    await seedImage({
+      id: "img-1",
+      weddingId: "w-1",
+      galleryId: "gal-1",
+      sortOrder: 1000
+    })
+
+    const service = createImagesService(testDb)
+    const result = await service.updateImage("u-1", "img-1", {
+      galleryId: null
+    })
+
+    expect("data" in result && result.data?.galleryId).toBeNull()
+  })
+
+  it("blocks assigning an image to a gallery from another wedding", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-1")
+    await seedUser("u-2")
+    await seedWedding({ id: "w-1", userId: "u-1", slug: "img-cross-a" })
+    await seedWedding({ id: "w-2", userId: "u-2", slug: "img-cross-b" })
+    await seedGallery({ id: "gal-2", weddingId: "w-2" })
+    await seedImage({ id: "img-1", weddingId: "w-1", galleryId: null })
+
+    const service = createImagesService(testDb)
+    const result = await service.updateImage("u-1", "img-1", {
+      galleryId: "gal-2"
+    })
+
+    expect(result).toEqual({ error: "forbidden" })
+  })
+
+  it("reorders images within the same gallery via beforeId/afterId", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-1")
+    await seedWedding({ id: "w-1", userId: "u-1", slug: "img-reorder-slug" })
+    await seedGallery({ id: "gal-1", weddingId: "w-1" })
+    await seedImage({
+      id: "img-1",
+      weddingId: "w-1",
+      galleryId: "gal-1",
+      sortOrder: 1000
+    })
+    await seedImage({
+      id: "img-2",
+      weddingId: "w-1",
+      galleryId: "gal-1",
+      sortOrder: 2000
+    })
+    await seedImage({
+      id: "img-3",
+      weddingId: "w-1",
+      galleryId: "gal-1",
+      sortOrder: 3000
+    })
+
+    const service = createImagesService(testDb)
+    const moved = await service.reorderImage("u-1", "img-3", {
+      afterId: "img-1",
+      beforeId: "img-2"
+    })
+
+    expect("data" in moved && moved.data?.map((i) => i.id)).toEqual([
+      "img-1",
+      "img-3",
+      "img-2"
+    ])
+  })
+
+  it("blocks reordering an image against one from a different gallery", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-1")
+    await seedWedding({
+      id: "w-1",
+      userId: "u-1",
+      slug: "img-cross-gallery-slug"
+    })
+    await seedGallery({ id: "gal-1", weddingId: "w-1" })
+    await seedGallery({ id: "gal-2", weddingId: "w-1" })
+    await seedImage({ id: "img-1", weddingId: "w-1", galleryId: "gal-1" })
+    await seedImage({ id: "img-2", weddingId: "w-1", galleryId: "gal-2" })
+
+    const service = createImagesService(testDb)
+    const result = await service.reorderImage("u-1", "img-1", {
+      afterId: "img-2"
+    })
+
+    expect(result).toEqual({ error: "forbidden" })
+  })
+
+  it("creates a gallery via admin routes", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-1")
+    await seedWedding({ id: "w-1", userId: "u-1", slug: "gallery-route-slug" })
+
+    const guard = createAuthenticatedGuard("u-1") as unknown as typeof authGuard
+    const app = new Elysia().use(
+      createGalleriesRoutes({ service: createGalleriesService(testDb), guard })
+    )
+
+    const res = await app.handle(
+      jsonRequest("http://localhost/admin/galleries", "POST", {
+        title: "Cerimônia"
+      })
+    )
+    expect(res.status).toBe(201)
+    const body = await res.json()
+    expect(body.title).toBe("Cerimônia")
+    expect(body.sortOrder).toBe(1000)
+  })
+
+  it("public galleries endpoint returns only galleries with images, ordered, for published weddings", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-1")
+    await seedWedding({
+      id: "w-1",
+      userId: "u-1",
+      slug: "public-gallery-slug",
+      published: true
+    })
+    await seedGallery({
+      id: "gal-empty",
+      weddingId: "w-1",
+      sortOrder: 500,
+      title: "Vazia"
+    })
+    await seedGallery({
+      id: "gal-1",
+      weddingId: "w-1",
+      sortOrder: 1000,
+      title: "Com fotos"
+    })
+    await seedImage({
+      id: "img-1",
+      weddingId: "w-1",
+      galleryId: "gal-1",
+      sortOrder: 2000
+    })
+    await seedImage({
+      id: "img-2",
+      weddingId: "w-1",
+      galleryId: "gal-1",
+      sortOrder: 1000
+    })
+
+    const app = new Elysia().use(
+      createPublicRoutes({
+        service: createPublicService(testDb),
+        guestsService: createGuestsService(testDb)
+      })
+    )
+
+    const res = await app.handle(
+      new Request(
+        "http://localhost/public/weddings/public-gallery-slug/galleries"
+      )
+    )
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body).toHaveLength(1)
+    expect(body[0].title).toBe("Com fotos")
+    expect(body[0].images.map((i: { id: string }) => i.id)).toEqual([
+      "img-2",
+      "img-1"
+    ])
   })
 })
 
@@ -512,22 +832,22 @@ describe("routes integration", () => {
       createWeddingsRoutes({
         service: createWeddingsService(testDb),
         guard: createAuthenticatedGuard(
-          "u-admin",
-        ) as unknown as typeof authGuard,
-      }),
+          "u-admin"
+        ) as unknown as typeof authGuard
+      })
     )
 
     const createResponse = await app.handle(
       jsonRequest("http://localhost/admin/wedding", "POST", {
         title: "Casamento",
-        slug: "casamento-admin",
-      }),
+        slug: "casamento-admin"
+      })
     )
 
     expect(createResponse.status).toBe(201)
 
     const meResponse = await app.handle(
-      new Request("http://localhost/admin/wedding/me"),
+      new Request("http://localhost/admin/wedding/me")
     )
     expect(meResponse.status).toBe(200)
 
@@ -543,19 +863,19 @@ describe("routes integration", () => {
     await seedWedding({
       id: "w-existing",
       userId: "u-2",
-      slug: "slug-ocupado",
+      slug: "slug-ocupado"
     })
 
     const guard = createAuthenticatedGuard("u-1") as unknown as typeof authGuard
     const app = new Elysia().use(
-      createWeddingsRoutes({ service: createWeddingsService(testDb), guard }),
+      createWeddingsRoutes({ service: createWeddingsService(testDb), guard })
     )
 
     const res = await app.handle(
       jsonRequest("http://localhost/admin/wedding", "POST", {
         title: "Outro Casamento",
-        slug: "slug-ocupado",
-      }),
+        slug: "slug-ocupado"
+      })
     )
     expect(res.status).toBe(409)
   })
@@ -568,14 +888,14 @@ describe("routes integration", () => {
 
     const guard = createAuthenticatedGuard("u-1") as unknown as typeof authGuard
     const app = new Elysia().use(
-      createWeddingsRoutes({ service: createWeddingsService(testDb), guard }),
+      createWeddingsRoutes({ service: createWeddingsService(testDb), guard })
     )
 
     const res = await app.handle(
       jsonRequest("http://localhost/admin/wedding", "POST", {
         title: "Segundo Casamento",
-        slug: "outro-slug",
-      }),
+        slug: "outro-slug"
+      })
     )
     expect(res.status).toBe(409)
   })
@@ -588,7 +908,7 @@ describe("routes integration", () => {
 
     const guard = createAuthenticatedGuard("u-1") as unknown as typeof authGuard
     const app = new Elysia().use(
-      createWeddingsRoutes({ service: createWeddingsService(testDb), guard }),
+      createWeddingsRoutes({ service: createWeddingsService(testDb), guard })
     )
 
     const res = await app.handle(
@@ -598,8 +918,8 @@ describe("routes integration", () => {
         venueName: "Espaço Jardim",
         venueCep: "01310-100",
         dressCodeGuests: "Traje social esporte fino",
-        ogImage: "https://example.com/og.jpg",
-      }),
+        ogImage: "https://example.com/og.jpg"
+      })
     )
     expect(res.status).toBe(200)
     const body = await res.json()
@@ -619,16 +939,16 @@ describe("routes integration", () => {
     await seedWedding({ id: "w-1", userId: "u-owner", slug: "owner-slug" })
 
     const guard = createAuthenticatedGuard(
-      "u-other",
+      "u-other"
     ) as unknown as typeof authGuard
     const app = new Elysia().use(
-      createWeddingsRoutes({ service: createWeddingsService(testDb), guard }),
+      createWeddingsRoutes({ service: createWeddingsService(testDb), guard })
     )
 
     const res = await app.handle(
       jsonRequest("http://localhost/admin/wedding/w-1", "PUT", {
-        title: "Invasão",
-      }),
+        title: "Invasão"
+      })
     )
     expect(res.status).toBe(403)
   })
@@ -642,11 +962,11 @@ describe("routes integration", () => {
 
     const guard = createAuthenticatedGuard("u-1") as unknown as typeof authGuard
     const app = new Elysia().use(
-      createGiftsRoutes({ service: createGiftsService(testDb), guard }),
+      createGiftsRoutes({ service: createGiftsService(testDb), guard })
     )
 
     const giftsResponse = await app.handle(
-      new Request("http://localhost/admin/gifts"),
+      new Request("http://localhost/admin/gifts")
     )
     expect(giftsResponse.status).toBe(200)
     const giftsPayload = await giftsResponse.json()
@@ -661,7 +981,7 @@ describe("routes integration", () => {
 
     const guard = createAuthenticatedGuard("u-1") as unknown as typeof authGuard
     const app = new Elysia().use(
-      createGiftsRoutes({ service: createGiftsService(testDb), guard }),
+      createGiftsRoutes({ service: createGiftsService(testDb), guard })
     )
 
     const res = await app.handle(
@@ -669,8 +989,8 @@ describe("routes integration", () => {
         name: "Fritadeira",
         price: 45000,
         paymentType: "url",
-        paymentValue: "https://loja.com/fritadeira",
-      }),
+        paymentValue: "https://loja.com/fritadeira"
+      })
     )
     expect(res.status).toBe(201)
     const body = await res.json()
@@ -686,18 +1006,18 @@ describe("routes integration", () => {
       id: "w-public",
       userId: "u-public",
       slug: "public-slug",
-      published: true,
+      published: true
     })
 
     const app = new Elysia().use(
       createPublicRoutes({
         service: createPublicService(testDb),
-        guestsService: createGuestsService(testDb),
-      }),
+        guestsService: createGuestsService(testDb)
+      })
     )
 
     const weddingResponse = await app.handle(
-      new Request("http://localhost/public/weddings/public-slug"),
+      new Request("http://localhost/public/weddings/public-slug")
     )
     expect(weddingResponse.status).toBe(200)
     const weddingBody = await weddingResponse.json()
@@ -708,8 +1028,8 @@ describe("routes integration", () => {
     const rsvpResponse = await app.handle(
       jsonRequest("http://localhost/public/weddings/public-slug/rsvp", "POST", {
         name: "Guest",
-        rsvp: "confirmed",
-      }),
+        rsvp: "confirmed"
+      })
     )
 
     expect(rsvpResponse.status).toBe(201)
@@ -731,18 +1051,18 @@ describe("routes integration", () => {
       id: "w-1",
       userId: "u-1",
       slug: "privado",
-      published: false,
+      published: false
     })
 
     const app = new Elysia().use(
       createPublicRoutes({
         service: createPublicService(testDb),
-        guestsService: createGuestsService(testDb),
-      }),
+        guestsService: createGuestsService(testDb)
+      })
     )
 
     const res = await app.handle(
-      new Request("http://localhost/public/weddings/privado"),
+      new Request("http://localhost/public/weddings/privado")
     )
     expect(res.status).toBe(404)
   })
@@ -755,7 +1075,7 @@ describe("routes integration", () => {
 
     const guestsService = createGuestsService(testDb)
     const createResult = await guestsService.createGuest("u-1", {
-      name: "Maria",
+      name: "Maria"
     })
     const guest = "data" in createResult ? createResult.data : null
     if (!guest) throw new Error("Expected guest data")
@@ -763,14 +1083,14 @@ describe("routes integration", () => {
     const app = new Elysia().use(
       createPublicRoutes({
         service: createPublicService(testDb),
-        guestsService,
-      }),
+        guestsService
+      })
     )
 
     const res = await app.handle(
       jsonRequest(`http://localhost/public/rsvp/${guest.rsvpToken}`, "POST", {
-        rsvp: "confirmed",
-      }),
+        rsvp: "confirmed"
+      })
     )
     expect(res.status).toBe(200)
     const body = await res.json()
@@ -786,7 +1106,7 @@ describe("routes integration", () => {
     const guestsService = createGuestsService(testDb)
     const createResult = await guestsService.createGuest("u-1", {
       name: "Maria",
-      plusOne: 3,
+      plusOne: 3
     })
     const guest = "data" in createResult ? createResult.data : null
     if (!guest) throw new Error("Expected guest data")
@@ -794,15 +1114,15 @@ describe("routes integration", () => {
     const app = new Elysia().use(
       createPublicRoutes({
         service: createPublicService(testDb),
-        guestsService,
-      }),
+        guestsService
+      })
     )
 
     const res = await app.handle(
       jsonRequest(`http://localhost/public/rsvp/${guest.rsvpToken}`, "POST", {
         rsvp: "confirmed",
-        companions: 1,
-      }),
+        companions: 1
+      })
     )
     expect(res.status).toBe(200)
     const body = await res.json()
@@ -819,7 +1139,7 @@ describe("routes integration", () => {
     const guestsService = createGuestsService(testDb)
     const createResult = await guestsService.createGuest("u-1", {
       name: "Maria",
-      plusOne: 2,
+      plusOne: 2
     })
     const guest = "data" in createResult ? createResult.data : null
     if (!guest) throw new Error("Expected guest data")
@@ -827,20 +1147,20 @@ describe("routes integration", () => {
     const app = new Elysia().use(
       createPublicRoutes({
         service: createPublicService(testDb),
-        guestsService,
-      }),
+        guestsService
+      })
     )
 
     const res = await app.handle(
       jsonRequest(`http://localhost/public/rsvp/${guest.rsvpToken}`, "POST", {
         rsvp: "confirmed",
-        companions: 3,
-      }),
+        companions: 3
+      })
     )
     expect(res.status).toBe(422)
     const body = await res.json()
     expect(body.message).toBe(
-      "Você pode confirmar no máximo 2 acompanhante(s).",
+      "Você pode confirmar no máximo 2 acompanhante(s)."
     )
 
     const rows = await testDb
@@ -858,13 +1178,13 @@ describe("routes integration", () => {
     await seedWedding({
       id: "w-1",
       userId: "u-1",
-      slug: "slug-invalid-companions",
+      slug: "slug-invalid-companions"
     })
 
     const guestsService = createGuestsService(testDb)
     const createResult = await guestsService.createGuest("u-1", {
       name: "Maria",
-      plusOne: 2,
+      plusOne: 2
     })
     const guest = "data" in createResult ? createResult.data : null
     if (!guest) throw new Error("Expected guest data")
@@ -872,31 +1192,31 @@ describe("routes integration", () => {
     const app = new Elysia().use(
       createPublicRoutes({
         service: createPublicService(testDb),
-        guestsService,
-      }),
+        guestsService
+      })
     )
 
     const negative = await app.handle(
       jsonRequest(`http://localhost/public/rsvp/${guest.rsvpToken}`, "POST", {
         rsvp: "confirmed",
-        companions: -1,
-      }),
+        companions: -1
+      })
     )
     expect(negative.status).toBe(422)
 
     const fractional = await app.handle(
       jsonRequest(`http://localhost/public/rsvp/${guest.rsvpToken}`, "POST", {
         rsvp: "confirmed",
-        companions: 1.5,
-      }),
+        companions: 1.5
+      })
     )
     expect(fractional.status).toBe(422)
 
     const notNumeric = await app.handle(
       jsonRequest(`http://localhost/public/rsvp/${guest.rsvpToken}`, "POST", {
         rsvp: "confirmed",
-        companions: "two",
-      }),
+        companions: "two"
+      })
     )
     expect(notNumeric.status).toBe(422)
   })
@@ -910,7 +1230,7 @@ describe("routes integration", () => {
     const guestsService = createGuestsService(testDb)
     const createResult = await guestsService.createGuest("u-1", {
       name: "Maria",
-      plusOne: 2,
+      plusOne: 2
     })
     const guest = "data" in createResult ? createResult.data : null
     if (!guest) throw new Error("Expected guest data")
@@ -918,21 +1238,21 @@ describe("routes integration", () => {
     const app = new Elysia().use(
       createPublicRoutes({
         service: createPublicService(testDb),
-        guestsService,
-      }),
+        guestsService
+      })
     )
 
     await app.handle(
       jsonRequest(`http://localhost/public/rsvp/${guest.rsvpToken}`, "POST", {
         rsvp: "confirmed",
-        companions: 2,
-      }),
+        companions: 2
+      })
     )
 
     const declineRes = await app.handle(
       jsonRequest(`http://localhost/public/rsvp/${guest.rsvpToken}`, "POST", {
-        rsvp: "declined",
-      }),
+        rsvp: "declined"
+      })
     )
     expect(declineRes.status).toBe(200)
     const body = await declineRes.json()
@@ -949,7 +1269,7 @@ describe("routes integration", () => {
     const guestsService = createGuestsService(testDb)
     const createResult = await guestsService.createGuest("u-1", {
       name: "Maria",
-      plusOne: 2,
+      plusOne: 2
     })
     const guest = "data" in createResult ? createResult.data : null
     if (!guest) throw new Error("Expected guest data")
@@ -957,7 +1277,7 @@ describe("routes integration", () => {
     await guestsService.confirmRsvpByToken(guest.rsvpToken!, "confirmed", 2)
 
     const updateResult = await guestsService.updateGuest("u-1", guest.id, {
-      rsvp: "pending",
+      rsvp: "pending"
     })
     const updated = "data" in updateResult ? updateResult.data : null
     expect(updated?.rsvp).toBe("pending")
@@ -975,24 +1295,24 @@ describe("guest messages integration", () => {
       id: "g-1",
       weddingId: "w-1",
       active: false,
-      lockedAt: now,
+      lockedAt: now
     })
     await seedGiftPayment({
       id: "p-1",
       giftId: "g-1",
       weddingId: "w-1",
-      message: "Parabéns aos noivos!",
+      message: "Parabéns aos noivos!"
     })
 
     const guard = createAuthenticatedGuard("u-1") as unknown as typeof authGuard
     const app = new Elysia().use(
-      createPaymentsRoutes({ service: createPaymentsService(testDb), guard }),
+      createPaymentsRoutes({ service: createPaymentsService(testDb), guard })
     )
 
     const res = await app.handle(
       new Request("http://localhost/admin/payments/p-1/confirm", {
-        method: "PUT",
-      }),
+        method: "PUT"
+      })
     )
     expect(res.status).toBe(200)
     const body = await res.json()
@@ -1018,19 +1338,19 @@ describe("guest messages integration", () => {
       id: "g-1",
       weddingId: "w-1",
       active: false,
-      lockedAt: now,
+      lockedAt: now
     })
     await seedGiftPayment({ id: "p-1", giftId: "g-1", weddingId: "w-1" })
 
     const guard = createAuthenticatedGuard("u-1") as unknown as typeof authGuard
     const app = new Elysia().use(
-      createPaymentsRoutes({ service: createPaymentsService(testDb), guard }),
+      createPaymentsRoutes({ service: createPaymentsService(testDb), guard })
     )
 
     const res = await app.handle(
       new Request("http://localhost/admin/payments/p-1/confirm", {
-        method: "PUT",
-      }),
+        method: "PUT"
+      })
     )
     expect(res.status).toBe(200)
     const body = await res.json()
@@ -1054,7 +1374,7 @@ describe("guest messages integration", () => {
       id: "p-1",
       giftId: "g-1",
       weddingId: "w-1",
-      status: "approved",
+      status: "approved"
     })
     await seedGuestMessage({ id: "m-1", weddingId: "w-1", paymentId: "p-1" })
 
@@ -1072,20 +1392,20 @@ describe("guest messages integration", () => {
       id: "w-1",
       userId: "u-1",
       slug: "public-slug",
-      published: true,
+      published: true
     })
     await seedGift({ id: "g-1", weddingId: "w-1" })
     await seedGiftPayment({
       id: "p-1",
       giftId: "g-1",
       weddingId: "w-1",
-      status: "approved",
+      status: "approved"
     })
     await seedGiftPayment({
       id: "p-2",
       giftId: "g-1",
       weddingId: "w-1",
-      status: "approved",
+      status: "approved"
     })
     await seedGuestMessage({
       id: "m-1",
@@ -1093,7 +1413,7 @@ describe("guest messages integration", () => {
       paymentId: "p-1",
       senderName: "Visível",
       message: "Mensagem visível",
-      isVisible: true,
+      isVisible: true
     })
     await seedGuestMessage({
       id: "m-2",
@@ -1101,18 +1421,18 @@ describe("guest messages integration", () => {
       paymentId: "p-2",
       senderName: "Oculto",
       message: "Mensagem oculta",
-      isVisible: false,
+      isVisible: false
     })
 
     const app = new Elysia().use(
       createPublicRoutes({
         service: createPublicService(testDb),
-        guestsService: createGuestsService(testDb),
-      }),
+        guestsService: createGuestsService(testDb)
+      })
     )
 
     const res = await app.handle(
-      new Request("http://localhost/public/weddings/public-slug/messages"),
+      new Request("http://localhost/public/weddings/public-slug/messages")
     )
     expect(res.status).toBe(200)
     const messages = await res.json()

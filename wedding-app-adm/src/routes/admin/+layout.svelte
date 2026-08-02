@@ -12,6 +12,7 @@
 		{ href: '/admin/payments', label: 'Pagamentos', icon: '💳' },
 		{ href: '/admin/messages', label: 'Mensagens', icon: '💬' },
 		{ href: '/admin/media', label: 'Mídia', icon: '🖼️' },
+		{ href: '/admin/galleries', label: 'Galerias', icon: '📸' },
 		{ href: '/admin/settings', label: 'Configurações', icon: '⚙️' }
 	];
 

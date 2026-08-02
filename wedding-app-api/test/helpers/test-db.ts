@@ -10,7 +10,7 @@ const testDatabaseUrl =
 
 const sql = postgres(testDatabaseUrl, {
   max: 1,
-  onnotice: () => {},
+  onnotice: () => {}
 })
 
 export const testDb = drizzle(sql, { schema })
@@ -46,6 +46,7 @@ export async function resetTestDatabase() {
   await sql.unsafe(`
     TRUNCATE TABLE
       "images",
+      "galleries",
       "guest_messages",
       "gifts",
       "guests",

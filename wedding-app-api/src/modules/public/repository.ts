@@ -1,6 +1,6 @@
 import { and, asc, count, eq } from "drizzle-orm"
 import type { Database } from "../../db"
-import { gifts, weddings } from "../../db/schema"
+import { galleries, gifts, images, weddings } from "../../db/schema"
 
 export function createPublicRepository(database: Database) {
   return {
@@ -25,7 +25,7 @@ export function createPublicRepository(database: Database) {
         database
           .select({ total: count() })
           .from(gifts)
-          .where(eq(gifts.weddingId, weddingId)),
+          .where(eq(gifts.weddingId, weddingId))
       ])
       return { items, total }
     },
@@ -45,5 +45,33 @@ export function createPublicRepository(database: Database) {
       return rows[0] ?? null
     },
 
+    async findGalleriesByWeddingId(weddingId: string) {
+      const [galleryRows, imageRows] = await Promise.all([
+        database
+          .select()
+          .from(galleries)
+          .where(eq(galleries.weddingId, weddingId))
+          .orderBy(asc(galleries.sortOrder), asc(galleries.id)),
+        database
+          .select()
+          .from(images)
+          .where(eq(images.weddingId, weddingId))
+          .orderBy(asc(images.sortOrder), asc(images.id))
+      ])
+
+      return galleryRows
+        .map((gallery) => ({
+          id: gallery.id,
+          title: gallery.title,
+          images: imageRows
+            .filter((image) => image.galleryId === gallery.id)
+            .map((image) => ({
+              id: image.id,
+              url: image.url,
+              description: image.description
+            }))
+        }))
+        .filter((gallery) => gallery.images.length > 0)
+    }
   }
 }

@@ -12,6 +12,10 @@
 	function coupleName(title: string) {
 		return title.replace(/\s*\|\s*.*$/, '').trim();
 	}
+
+	function hasPassed(dateStr: string) {
+		return parseDateOnly(dateStr) < new Date(new Date().toDateString());
+	}
 </script>
 
 <section
@@ -34,7 +38,7 @@
 	<div class="relative z-10 flex flex-col items-center gap-4 px-6 text-center text-white">
 		{#if wedding.date}
 			<p class="text-xs font-medium tracking-[0.3em] uppercase opacity-80">
-				CASARAM EM &mdash; {formatDate(wedding.date)}
+				{hasPassed(wedding.date) ? 'CASARAM EM' : 'CASAMENTO EM'} &mdash; {formatDate(wedding.date)}
 			</p>
 		{/if}
 

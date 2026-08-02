@@ -63,6 +63,18 @@ export interface GuestMessage {
 	createdAt: string;
 }
 
+export interface GalleryImage {
+	id: string;
+	url: string;
+	description: string | null;
+}
+
+export interface Gallery {
+	id: string;
+	title: string;
+	images: GalleryImage[];
+}
+
 export async function getWedding(slug: string, fetchFn: typeof fetch = fetch): Promise<Wedding> {
 	const res = await fetchFn(`${API_URL}/public/weddings/${slug}`);
 	if (!res.ok) throw new Error(`Wedding not found: ${res.status}`);
@@ -101,6 +113,15 @@ export async function lockGift(
 		body: JSON.stringify(payload)
 	});
 	if (!res.ok) throw new Error(`Lock failed: ${res.status}`);
+	return res.json();
+}
+
+export async function getGalleries(
+	slug: string,
+	fetchFn: typeof fetch = fetch
+): Promise<Gallery[]> {
+	const res = await fetchFn(`${API_URL}/public/weddings/${slug}/galleries`);
+	if (!res.ok) throw new Error(`Galleries fetch failed: ${res.status}`);
 	return res.json();
 }
 

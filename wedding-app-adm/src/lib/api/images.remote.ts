@@ -1,12 +1,14 @@
 import * as v from 'valibot';
 import { query, command } from '$app/server';
-import { apiGet, apiDelete } from '$lib/server/api';
+import { apiGet, apiDelete, apiPut, apiPost } from '$lib/server/api';
 
 export type Image = {
 	id: string;
 	weddingId: string;
+	galleryId?: string | null;
 	url: string;
 	description?: string | null;
+	sortOrder: number;
 	createdAt: string;
 };
 
@@ -21,3 +23,22 @@ export const getImages = query(async () => {
 });
 
 export const deleteImage = command(v.string(), async (id) => apiDelete(`/admin/images/${id}`));
+
+export const updateImage = command(
+	v.object({
+		id: v.string(),
+		description: v.optional(v.nullable(v.string())),
+		galleryId: v.optional(v.nullable(v.string()))
+	}),
+	async ({ id, ...body }) => apiPut<Image>(`/admin/images/${id}`, body)
+);
+
+export const reorderImage = command(
+	v.object({
+		id: v.string(),
+		beforeId: v.optional(v.string()),
+		afterId: v.optional(v.string())
+	}),
+	async ({ id, beforeId, afterId }) =>
+		apiPost<Image[]>(`/admin/images/${id}/reorder`, { beforeId, afterId })
+);

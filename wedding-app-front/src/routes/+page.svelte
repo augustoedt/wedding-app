@@ -4,9 +4,11 @@
 	import Hero from '$lib/components/Hero.svelte';
 	import Countdown from '$lib/components/Countdown.svelte';
 	import WelcomeText from '$lib/components/WelcomeText.svelte';
+	import Gallery from '$lib/components/Gallery.svelte';
 
 	let { data } = $props();
 	const wedding = untrack(() => data.wedding);
+	const gallery = untrack(() => data.gallery);
 </script>
 
 <svelte:head>
@@ -22,6 +24,9 @@
 		{/if}
 		{#if wedding.description}
 			<WelcomeText description={wedding.description} />
+		{/if}
+		{#if gallery}
+			<Gallery {gallery} />
 		{/if}
 	</main>
 </WeddingLayout>
