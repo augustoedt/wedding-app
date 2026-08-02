@@ -48,7 +48,7 @@
 	}
 </script>
 
-<div class="p-8 max-w-lg">
+<div class="max-w-lg p-8">
 	<div class="mb-6 flex items-center gap-4">
 		<a href="/admin/guests" class="text-sm text-slate-400 hover:text-slate-700">← Voltar</a>
 		<h1 class="text-2xl font-semibold text-slate-800">
@@ -60,7 +60,13 @@
 		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 			<div class="sm:col-span-2">
 				<label for="g-name" class="block text-sm font-medium text-slate-700">Nome *</label>
-				<input id="g-name" bind:value={form.name} required class="input mt-1" placeholder="Nome completo" />
+				<input
+					id="g-name"
+					bind:value={form.name}
+					required
+					class="input mt-1"
+					placeholder="Nome completo"
+				/>
 			</div>
 			<div>
 				<label for="g-email" class="block text-sm font-medium text-slate-700">E-mail</label>
@@ -71,10 +77,27 @@
 				<input id="g-phone" bind:value={form.phone} type="tel" class="input mt-1" />
 			</div>
 			<div>
-				<label for="g-plusone" class="block text-sm font-medium text-slate-700">Acompanhantes</label>
-				<input id="g-plusone" bind:value={form.plusOne} type="number" min="0" class="input mt-1 w-24" />
+				<label for="g-plusone" class="block text-sm font-medium text-slate-700"
+					>Acompanhantes permitidos</label
+				>
+				<input
+					id="g-plusone"
+					bind:value={form.plusOne}
+					type="number"
+					min="0"
+					class="input mt-1 w-24"
+				/>
 			</div>
 		</div>
+
+		{#if !isNew && data.guest?.rsvp === 'confirmed' && data.guest.plusOne > 0}
+			<p class="mt-4 text-sm text-slate-500">
+				Acompanhantes confirmados pelo convidado: <span class="font-medium text-slate-700"
+					>{data.guest.confirmedCompanions}</span
+				>
+				de {data.guest.plusOne}.
+			</p>
+		{/if}
 
 		{#if formError}
 			<p class="mt-3 text-sm text-red-600">{formError}</p>

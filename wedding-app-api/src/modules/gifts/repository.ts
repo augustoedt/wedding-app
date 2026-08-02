@@ -1,11 +1,23 @@
-import { and, eq, isNotNull, lt } from "drizzle-orm"
+import { and, asc, eq, isNotNull, lt, max } from "drizzle-orm"
 import type { Database } from "../../db"
 import { gifts } from "../../db/schema"
 
 export function createGiftsRepository(database: Database) {
   return {
     async findByWeddingId(weddingId: string) {
-      return database.select().from(gifts).where(eq(gifts.weddingId, weddingId))
+      return database
+        .select()
+        .from(gifts)
+        .where(eq(gifts.weddingId, weddingId))
+        .orderBy(asc(gifts.sortOrder), asc(gifts.id))
+    },
+
+    async findMaxSortOrder(weddingId: string) {
+      const rows = await database
+        .select({ value: max(gifts.sortOrder) })
+        .from(gifts)
+        .where(eq(gifts.weddingId, weddingId))
+      return rows[0]?.value ?? null
     },
 
     async findById(id: string) {
@@ -25,6 +37,7 @@ export function createGiftsRepository(database: Database) {
       imageUrl?: string | null
       paymentType?: string | null
       paymentValue?: string | null
+      sortOrder: number
     }) {
       const rows = await database.insert(gifts).values(data).returning()
       return rows[0]!
@@ -41,6 +54,7 @@ export function createGiftsRepository(database: Database) {
         paymentValue: string | null
         isActive: boolean
         lockedAt: Date | null
+        sortOrder: number
       }>
     ) {
       const rows = await database

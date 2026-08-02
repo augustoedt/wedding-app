@@ -63,14 +63,16 @@
 		wedding.refresh();
 	}
 
-	const totalGuests = $derived(
-		guests.current?.reduce((sum, g) => sum + g.plusOne + 1, 0) ?? 0
-	);
+	const totalGuests = $derived(guests.current?.reduce((sum, g) => sum + g.plusOne + 1, 0) ?? 0);
 	const confirmedCount = $derived(
-		guests.current?.filter((g) => g.rsvp === 'confirmed').reduce((sum, g) => sum + g.plusOne + 1, 0) ?? 0
+		guests.current
+			?.filter((g) => g.rsvp === 'confirmed')
+			.reduce((sum, g) => sum + g.confirmedCompanions + 1, 0) ?? 0
 	);
 	const declinedCount = $derived(
-		guests.current?.filter((g) => g.rsvp === 'declined').reduce((sum, g) => sum + g.plusOne + 1, 0) ?? 0
+		guests.current
+			?.filter((g) => g.rsvp === 'declined')
+			.reduce((sum, g) => sum + g.plusOne + 1, 0) ?? 0
 	);
 	const activeGifts = $derived(gifts.current?.filter((g) => g.isActive).length ?? 0);
 
@@ -89,9 +91,7 @@
 	{#if wedding.loading}
 		<div class="h-32 animate-pulse rounded-xl bg-slate-200"></div>
 	{:else if wedding.error}
-		<div class="rounded-xl bg-red-50 p-4 text-red-600">
-			Erro ao carregar dados do casamento.
-		</div>
+		<div class="rounded-xl bg-red-50 p-4 text-red-600">Erro ao carregar dados do casamento.</div>
 	{:else if !wedding.current}
 		{#if creating}
 			<div class="rounded-xl bg-white p-6 shadow-sm">
@@ -99,11 +99,23 @@
 				<div class="space-y-4">
 					<div>
 						<label for="c-title" class="block text-sm font-medium text-slate-700">Título *</label>
-						<input id="c-title" bind:value={form.title} required class="input mt-1" placeholder="Casamento da Ana e do Bruno" />
+						<input
+							id="c-title"
+							bind:value={form.title}
+							required
+							class="input mt-1"
+							placeholder="Casamento da Ana e do Bruno"
+						/>
 					</div>
 					<div>
 						<label for="c-slug" class="block text-sm font-medium text-slate-700">Slug *</label>
-						<input id="c-slug" bind:value={form.slug} required class="input mt-1" placeholder="ana-e-bruno" />
+						<input
+							id="c-slug"
+							bind:value={form.slug}
+							required
+							class="input mt-1"
+							placeholder="ana-e-bruno"
+						/>
 						<p class="mt-1 text-xs text-slate-400">Apenas letras minúsculas, números e hífen.</p>
 					</div>
 					<div>
@@ -112,11 +124,20 @@
 					</div>
 					<div>
 						<label for="c-desc" class="block text-sm font-medium text-slate-700">Descrição</label>
-						<textarea id="c-desc" bind:value={form.description} class="input mt-1" rows="3"></textarea>
+						<textarea id="c-desc" bind:value={form.description} class="input mt-1" rows="3"
+						></textarea>
 					</div>
 					<div>
-						<label for="c-cover" class="block text-sm font-medium text-slate-700">Imagem de capa (URL)</label>
-						<input id="c-cover" bind:value={form.coverImage} type="url" class="input mt-1" placeholder="https://..." />
+						<label for="c-cover" class="block text-sm font-medium text-slate-700"
+							>Imagem de capa (URL)</label
+						>
+						<input
+							id="c-cover"
+							bind:value={form.coverImage}
+							type="url"
+							class="input mt-1"
+							placeholder="https://..."
+						/>
 					</div>
 					<div class="flex gap-3">
 						<button onclick={submitCreate} class="btn-primary">Criar</button>
@@ -125,7 +146,9 @@
 				</div>
 			</div>
 		{:else}
-			<div class="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 py-16 text-center">
+			<div
+				class="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 py-16 text-center"
+			>
 				<p class="text-slate-500">Nenhum casamento cadastrado ainda.</p>
 				<button onclick={startCreate} class="btn-primary mt-4">Criar Casamento</button>
 			</div>
@@ -135,26 +158,26 @@
 
 		<div class="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
 			<div class="rounded-xl bg-white p-5 shadow-sm">
-				<p class="text-xs uppercase tracking-wide text-slate-500">Total Convidados</p>
+				<p class="text-xs tracking-wide text-slate-500 uppercase">Total Convidados</p>
 				<p class="mt-1 text-3xl font-bold text-slate-800">{guests.loading ? '—' : totalGuests}</p>
 			</div>
 			<div class="rounded-xl bg-white p-5 shadow-sm">
-				<p class="text-xs uppercase tracking-wide text-slate-500">Confirmados</p>
+				<p class="text-xs tracking-wide text-slate-500 uppercase">Confirmados</p>
 				<p class="mt-1 text-3xl font-bold text-emerald-600">{confirmedCount}</p>
 			</div>
 			<div class="rounded-xl bg-white p-5 shadow-sm">
-				<p class="text-xs uppercase tracking-wide text-slate-500">Recusaram</p>
+				<p class="text-xs tracking-wide text-slate-500 uppercase">Recusaram</p>
 				<p class="mt-1 text-3xl font-bold text-rose-500">{declinedCount}</p>
 			</div>
 			<div class="rounded-xl bg-white p-5 shadow-sm">
-				<p class="text-xs uppercase tracking-wide text-slate-500">Presentes Ativos</p>
+				<p class="text-xs tracking-wide text-slate-500 uppercase">Presentes Ativos</p>
 				<p class="mt-1 text-3xl font-bold text-slate-800">{activeGifts}</p>
 			</div>
 		</div>
 
 		{@const publicUrl = w.siteUrl ? w.siteUrl.replace(/\/$/, '') : null}
 		<div class="mb-6 rounded-xl border border-rose-100 bg-rose-50 p-5">
-			<p class="mb-2 text-xs font-medium uppercase tracking-wide text-rose-500">
+			<p class="mb-2 text-xs font-medium tracking-wide text-rose-500 uppercase">
 				Link de Compartilhamento
 			</p>
 			{#if publicUrl}
@@ -181,7 +204,9 @@
 				{/if}
 			{:else}
 				<p class="text-sm text-slate-400">
-					URL não configurada. <a href="/admin/settings" class="text-rose-500 underline">Configure em Configurações</a>.
+					URL não configurada. <a href="/admin/settings" class="text-rose-500 underline"
+						>Configure em Configurações</a
+					>.
 				</p>
 			{/if}
 		</div>
@@ -204,11 +229,20 @@
 					</div>
 					<div>
 						<label for="e-desc" class="block text-sm font-medium text-slate-700">Descrição</label>
-						<textarea id="e-desc" bind:value={form.description} class="input mt-1" rows="3"></textarea>
+						<textarea id="e-desc" bind:value={form.description} class="input mt-1" rows="3"
+						></textarea>
 					</div>
 					<div>
-						<label for="e-cover" class="block text-sm font-medium text-slate-700">Imagem de capa (URL)</label>
-						<input id="e-cover" bind:value={form.coverImage} type="url" class="input mt-1" placeholder="https://..." />
+						<label for="e-cover" class="block text-sm font-medium text-slate-700"
+							>Imagem de capa (URL)</label
+						>
+						<input
+							id="e-cover"
+							bind:value={form.coverImage}
+							type="url"
+							class="input mt-1"
+							placeholder="https://..."
+						/>
 					</div>
 					<div class="flex gap-3">
 						<button onclick={submitEdit} class="btn-primary">Salvar</button>

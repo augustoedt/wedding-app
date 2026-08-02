@@ -15,6 +15,7 @@ export type Gift = {
 	paymentValue?: string | null;
 	isActive: boolean;
 	lockedAt?: string | null;
+	sortOrder: number;
 	createdAt: string;
 	updatedAt: string;
 };
@@ -50,7 +51,12 @@ export const updateGift = command(
 	async ({ id, ...body }) => apiPut<Gift>(`/admin/gifts/${id}`, body)
 );
 
-export const deleteGift = command(
-	v.string(),
-	async (id) => apiDelete(`/admin/gifts/${id}`)
+export const deleteGift = command(v.string(), async (id) => apiDelete(`/admin/gifts/${id}`));
+
+export const reorderGift = command(
+	v.object({
+		id: v.string(),
+		direction: v.picklist(['up', 'down'])
+	}),
+	async ({ id, direction }) => apiPost<Gift[]>(`/admin/gifts/${id}/reorder`, { direction })
 );

@@ -1,16 +1,38 @@
 <script lang="ts">
-	import { getGifts, addGift, updateGift, deleteGift, type Gift, type GiftStatus } from '$lib/api/gifts.remote';
+	import {
+		getGifts,
+		addGift,
+		updateGift,
+		deleteGift,
+		reorderGift,
+		type Gift,
+		type GiftStatus
+	} from '$lib/api/gifts.remote';
 
 	const gifts = getGifts();
 
 	let showForm = $state(false);
 	let editingGift = $state<Gift | null>(null);
 
-	let form = $state({ name: '', description: '', price: '', imageUrl: '', paymentType: '', paymentValue: '' });
+	let form = $state({
+		name: '',
+		description: '',
+		price: '',
+		imageUrl: '',
+		paymentType: '',
+		paymentValue: ''
+	});
 
 	function openAdd() {
 		editingGift = null;
-		form = { name: '', description: '', price: '', imageUrl: '', paymentType: '', paymentValue: '' };
+		form = {
+			name: '',
+			description: '',
+			price: '',
+			imageUrl: '',
+			paymentType: '',
+			paymentValue: ''
+		};
 		showForm = true;
 	}
 
@@ -29,7 +51,7 @@
 
 	async function submitForm() {
 		const price = parseInt(form.price);
-		const paymentType = form.paymentType as 'url' | 'pix' | '' || undefined;
+		const paymentType = (form.paymentType as 'url' | 'pix' | '') || undefined;
 		if (editingGift) {
 			await updateGift({
 				id: editingGift.id,
@@ -83,6 +105,18 @@
 		gifts.refresh();
 	}
 
+	let reordering = $state<string | null>(null);
+
+	async function move(g: Gift, direction: 'up' | 'down') {
+		reordering = g.id;
+		try {
+			await reorderGift({ id: g.id, direction });
+			gifts.refresh();
+		} finally {
+			reordering = null;
+		}
+	}
+
 	function formatPrice(cents: number) {
 		return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 	}
@@ -102,23 +136,44 @@
 			<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 				<div class="sm:col-span-2">
 					<label for="gf-name" class="block text-sm font-medium text-slate-700">Nome *</label>
-					<input id="gf-name" bind:value={form.name} required class="input mt-1" placeholder="Ex: Jogo de panelas" />
+					<input
+						id="gf-name"
+						bind:value={form.name}
+						required
+						class="input mt-1"
+						placeholder="Ex: Jogo de panelas"
+					/>
 				</div>
 				<div>
-					<label for="gf-price" class="block text-sm font-medium text-slate-700">Preço (centavos) *</label>
-					<input id="gf-price" bind:value={form.price} required type="number" min="1" class="input mt-1" placeholder="15000" />
+					<label for="gf-price" class="block text-sm font-medium text-slate-700"
+						>Preço (centavos) *</label
+					>
+					<input
+						id="gf-price"
+						bind:value={form.price}
+						required
+						type="number"
+						min="1"
+						class="input mt-1"
+						placeholder="15000"
+					/>
 					<p class="mt-1 text-xs text-slate-400">Em centavos: R$150,00 = 15000</p>
 				</div>
 				<div>
-					<label for="gf-image" class="block text-sm font-medium text-slate-700">URL da Imagem</label>
+					<label for="gf-image" class="block text-sm font-medium text-slate-700"
+						>URL da Imagem</label
+					>
 					<input id="gf-image" bind:value={form.imageUrl} type="url" class="input mt-1" />
 				</div>
 				<div class="sm:col-span-2">
 					<label for="gf-desc" class="block text-sm font-medium text-slate-700">Descrição</label>
-					<textarea id="gf-desc" bind:value={form.description} class="input mt-1" rows="2"></textarea>
+					<textarea id="gf-desc" bind:value={form.description} class="input mt-1" rows="2"
+					></textarea>
 				</div>
 				<div>
-					<label for="gf-payment-type" class="block text-sm font-medium text-slate-700">Tipo de pagamento</label>
+					<label for="gf-payment-type" class="block text-sm font-medium text-slate-700"
+						>Tipo de pagamento</label
+					>
 					<select id="gf-payment-type" bind:value={form.paymentType} class="input mt-1">
 						<option value="">Nenhum</option>
 						<option value="url">Link externo</option>
@@ -152,14 +207,18 @@
 	{:else if gifts.error}
 		<div class="rounded-xl bg-red-50 p-4 text-red-600">Erro ao carregar presentes.</div>
 	{:else if !gifts.current?.length}
-		<div class="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 py-16 text-center">
+		<div
+			class="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 py-16 text-center"
+		>
 			<p class="text-slate-500">Nenhum presente cadastrado ainda.</p>
 		</div>
 	{:else}
 		<div class="overflow-hidden rounded-xl bg-white shadow-sm">
 			<table class="w-full text-sm">
 				<thead>
-					<tr class="border-b border-slate-100 bg-slate-50 text-left text-xs font-medium text-slate-500 uppercase tracking-wide">
+					<tr
+						class="border-b border-slate-100 bg-slate-50 text-left text-xs font-medium tracking-wide text-slate-500 uppercase"
+					>
 						<th class="px-4 py-3">Presente</th>
 						<th class="px-4 py-3">Preço</th>
 						<th class="px-4 py-3">Pagamento</th>
@@ -168,19 +227,59 @@
 					</tr>
 				</thead>
 				<tbody class="divide-y divide-slate-100">
-					{#each gifts.current as g (g.id)}
+					{#each gifts.current as g, i (g.id)}
 						<tr class="hover:bg-slate-50">
 							<td class="px-4 py-3">
 								<div class="flex items-center gap-3">
+									<div class="flex flex-col">
+										<button
+											onclick={() => move(g, 'up')}
+											disabled={i === 0 || reordering !== null}
+											aria-label="Mover para cima"
+											class="text-slate-300 hover:text-slate-600 disabled:opacity-30 disabled:hover:text-slate-300"
+										>
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												class="h-3.5 w-3.5"
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												stroke-width="2.5"
+												stroke-linecap="round"
+												stroke-linejoin="round"><polyline points="18 15 12 9 6 15" /></svg
+											>
+										</button>
+										<button
+											onclick={() => move(g, 'down')}
+											disabled={i === gifts.current.length - 1 || reordering !== null}
+											aria-label="Mover para baixo"
+											class="text-slate-300 hover:text-slate-600 disabled:opacity-30 disabled:hover:text-slate-300"
+										>
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												class="h-3.5 w-3.5"
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												stroke-width="2.5"
+												stroke-linecap="round"
+												stroke-linejoin="round"><polyline points="6 9 12 15 18 9" /></svg
+											>
+										</button>
+									</div>
 									{#if g.imageUrl}
 										<img src={g.imageUrl} alt={g.name} class="h-10 w-10 rounded-lg object-cover" />
 									{:else}
-										<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-xl">🎁</div>
+										<div
+											class="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-xl"
+										>
+											🎁
+										</div>
 									{/if}
 									<div>
 										<p class="font-medium text-slate-800">{g.name}</p>
 										{#if g.description}
-											<p class="truncate text-xs text-slate-400 max-w-48">{g.description}</p>
+											<p class="max-w-48 truncate text-xs text-slate-400">{g.description}</p>
 										{/if}
 									</div>
 								</div>
@@ -198,8 +297,11 @@
 							<td class="px-4 py-3">
 								<select
 									value={giftStatus(g)}
-									onchange={(e) => changeStatus(g, (e.target as HTMLSelectElement).value as GiftStatus)}
-									class="rounded-full px-2 py-1 text-xs font-medium border-0 focus:ring-1 focus:ring-rose-400 cursor-pointer {statusColors[giftStatus(g)]}"
+									onchange={(e) =>
+										changeStatus(g, (e.target as HTMLSelectElement).value as GiftStatus)}
+									class="cursor-pointer rounded-full border-0 px-2 py-1 text-xs font-medium focus:ring-1 focus:ring-rose-400 {statusColors[
+										giftStatus(g)
+									]}"
 								>
 									<option value="available">{statusLabels.available}</option>
 									<option value="locked">{statusLabels.locked}</option>
@@ -207,8 +309,12 @@
 								</select>
 							</td>
 							<td class="px-4 py-3 text-right">
-								<button onclick={() => openEdit(g)} class="mr-2 text-slate-400 hover:text-slate-700">Editar</button>
-								<button onclick={() => remove(g.id)} class="text-rose-400 hover:text-rose-600">Remover</button>
+								<button onclick={() => openEdit(g)} class="mr-2 text-slate-400 hover:text-slate-700"
+									>Editar</button
+								>
+								<button onclick={() => remove(g.id)} class="text-rose-400 hover:text-rose-600"
+									>Remover</button
+								>
 							</td>
 						</tr>
 					{/each}

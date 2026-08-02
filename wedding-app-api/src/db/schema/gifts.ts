@@ -16,6 +16,7 @@ export const gifts = pgTable("gifts", {
   paymentValue: text("payment_value"),
   isActive: boolean("is_active").notNull().default(true),
   lockedAt: timestamp("locked_at"),
+  sortOrder: integer("sort_order").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 })

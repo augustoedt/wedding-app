@@ -10,6 +10,7 @@ export const rsvpTokenParams = t.Object({
 
 export const rsvpTokenBody = t.Object({
   rsvp: t.Union([t.Literal("confirmed"), t.Literal("declined")]),
+  companions: t.Optional(t.Integer({ minimum: 0 })),
 })
 
 export const giftsQuery = t.Object({

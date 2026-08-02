@@ -31,3 +31,7 @@ export const updateGiftBody = t.Object({
 export const giftIdParams = t.Object({
   id: t.String(),
 })
+
+export const reorderGiftBody = t.Object({
+  direction: t.Union([t.Literal("up"), t.Literal("down")]),
+})

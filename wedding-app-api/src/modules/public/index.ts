@@ -67,8 +67,15 @@ export function createPublicRoutes({
     .post(
       "/rsvp/:token",
       async ({ params, body, status }) => {
-        const result = await guestsService.confirmRsvpByToken(params.token, body.rsvp)
-        if ("error" in result) return status(404, { message: "Invalid or expired RSVP link" })
+        const result = await guestsService.confirmRsvpByToken(params.token, body.rsvp, body.companions)
+        if ("error" in result) {
+          if (result.error === "companions_over_limit") {
+            return status(422, {
+              message: `Você pode confirmar no máximo ${result.allowed} acompanhante(s).`,
+            })
+          }
+          return status(404, { message: "Invalid or expired RSVP link" })
+        }
         return (result as { data: unknown }).data
       },
       { params: rsvpTokenParams, body: rsvpTokenBody }

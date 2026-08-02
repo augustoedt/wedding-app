@@ -34,9 +34,7 @@
 	);
 
 	const mapsEmbedUrl = $derived(
-		mapsQuery
-			? `https://www.google.com/maps?q=${encodeURIComponent(mapsQuery)}&output=embed`
-			: null
+		mapsQuery ? `https://www.google.com/maps?q=${encodeURIComponent(mapsQuery)}&output=embed` : null
 	);
 
 	const mapsUrl = $derived(
@@ -68,7 +66,7 @@
 
 			<!-- Local -->
 			<section class="mb-16">
-				<h2 class="mb-6 text-center text-sm font-medium tracking-[0.3em] uppercase text-stone-500">
+				<h2 class="mb-6 text-center text-sm font-medium tracking-[0.3em] text-stone-500 uppercase">
 					Local
 				</h2>
 
@@ -92,7 +90,9 @@
 					{/each}
 
 					{#if wedding.venueTime}
-						<p class="mt-4 text-center text-sm font-medium tracking-widest uppercase text-stone-600">
+						<p
+							class="mt-4 text-center text-sm font-medium tracking-widest text-stone-600 uppercase"
+						>
 							{wedding.venueTime}
 						</p>
 					{/if}
@@ -154,7 +154,7 @@
 
 			<!-- Dress code -->
 			<section>
-				<h2 class="mb-6 text-center text-sm font-medium tracking-[0.3em] uppercase text-stone-500">
+				<h2 class="mb-6 text-center text-sm font-medium tracking-[0.3em] text-stone-500 uppercase">
 					Dress Code
 				</h2>
 
@@ -170,7 +170,9 @@
 
 						{#if wedding.dressCodeGroomsmen}
 							<div>
-								<p class="mb-2 text-center text-xs font-medium tracking-widest uppercase text-stone-400">
+								<p
+									class="mb-2 text-center text-xs font-medium tracking-widest text-stone-400 uppercase"
+								>
 									Padrinhos e madrinhas
 								</p>
 								<div class="space-y-3 text-center font-mono text-sm leading-relaxed text-stone-600">

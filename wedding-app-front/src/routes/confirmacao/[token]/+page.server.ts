@@ -1,8 +1,11 @@
 import { PUBLIC_WEDDING_SLUG } from '$env/static/public';
-import { getWedding } from '$lib/server/api';
+import { getWedding, getGuestRsvp } from '$lib/server/api';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params }) => {
-	const wedding = await getWedding(PUBLIC_WEDDING_SLUG);
-	return { token: params.token, wedding };
+	const [wedding, guestRsvp] = await Promise.all([
+		getWedding(PUBLIC_WEDDING_SLUG),
+		getGuestRsvp(params.token)
+	]);
+	return { token: params.token, wedding, guestRsvp };
 };

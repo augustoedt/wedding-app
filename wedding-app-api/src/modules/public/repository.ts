@@ -1,4 +1,4 @@
-import { and, count, eq } from "drizzle-orm"
+import { and, asc, count, eq } from "drizzle-orm"
 import type { Database } from "../../db"
 import { gifts, weddings } from "../../db/schema"
 
@@ -19,6 +19,7 @@ export function createPublicRepository(database: Database) {
           .select()
           .from(gifts)
           .where(eq(gifts.weddingId, weddingId))
+          .orderBy(asc(gifts.sortOrder), asc(gifts.id))
           .limit(limit)
           .offset((page - 1) * limit),
         database

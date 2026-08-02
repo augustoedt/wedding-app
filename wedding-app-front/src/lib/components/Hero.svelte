@@ -14,7 +14,9 @@
 	}
 </script>
 
-<section class="relative flex h-screen w-full items-start justify-center overflow-hidden pt-28 md:pt-36">
+<section
+	class="relative flex h-screen w-full items-start justify-center overflow-hidden pt-28 md:pt-36"
+>
 	{#if wedding.coverImage}
 		<img
 			src={wedding.coverImage}
@@ -36,7 +38,7 @@
 			</p>
 		{/if}
 
-		<h1 class="font-serif text-6xl font-light leading-tight md:text-8xl">
+		<h1 class="font-serif text-6xl leading-tight font-light md:text-8xl">
 			{coupleName(wedding.title)}
 		</h1>
 	</div>
@@ -44,7 +46,12 @@
 	<!-- Scroll hint -->
 	<div class="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
 		<svg class="h-6 w-6 text-white/60" viewBox="0 0 24 24" fill="none">
-			<path d="M12 5v14M5 12l7 7 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+			<path
+				d="M12 5v14M5 12l7 7 7-7"
+				stroke="currentColor"
+				stroke-width="1.5"
+				stroke-linecap="round"
+			/>
 		</svg>
 	</div>
 </section>

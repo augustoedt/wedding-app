@@ -13,6 +13,7 @@ export const guests = pgTable("guests", {
   phone: text("phone"),
   rsvp: text("rsvp").notNull().default("pending"),
   plusOne: integer("plus_one").notNull().default(0),
+  confirmedCompanions: integer("confirmed_companions").notNull().default(0),
   inviteSent: boolean("invite_sent").notNull().default(false),
   rsvpToken: text("rsvp_token").unique(),
   createdAt: timestamp("created_at").notNull().defaultNow(),

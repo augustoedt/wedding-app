@@ -51,6 +51,7 @@ export function createGuestsRepository(database: Database) {
         phone: string | null
         rsvp: string
         plusOne: number
+        confirmedCompanions: number
         inviteSent: boolean
       }>
     ) {

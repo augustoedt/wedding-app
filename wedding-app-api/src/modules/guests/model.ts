@@ -16,6 +16,8 @@ export const updateGuestBody = t.Object({
   inviteSent: t.Optional(t.Boolean()),
 })
 
+export const confirmedCompanionsField = t.Integer({ minimum: 0 })
+
 export const guestIdParams = t.Object({
   id: t.String(),
 })

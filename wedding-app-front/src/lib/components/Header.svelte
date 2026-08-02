@@ -93,7 +93,7 @@
 					class:text-white={!isScrolled}
 					class:text-stone-800={isScrolled}
 				>
-					Minha Confirmação
+					Minha confirmação de presença
 				</a>
 			{/if}
 		</nav>
@@ -104,9 +104,21 @@
 			onclick={() => (mobileOpen = !mobileOpen)}
 			aria-label="Menu"
 		>
-			<span class="block h-0.5 w-6 transition-colors" class:bg-white={!isScrolled} class:bg-stone-800={isScrolled}></span>
-			<span class="block h-0.5 w-6 transition-colors" class:bg-white={!isScrolled} class:bg-stone-800={isScrolled}></span>
-			<span class="block h-0.5 w-6 transition-colors" class:bg-white={!isScrolled} class:bg-stone-800={isScrolled}></span>
+			<span
+				class="block h-0.5 w-6 transition-colors"
+				class:bg-white={!isScrolled}
+				class:bg-stone-800={isScrolled}
+			></span>
+			<span
+				class="block h-0.5 w-6 transition-colors"
+				class:bg-white={!isScrolled}
+				class:bg-stone-800={isScrolled}
+			></span>
+			<span
+				class="block h-0.5 w-6 transition-colors"
+				class:bg-white={!isScrolled}
+				class:bg-stone-800={isScrolled}
+			></span>
 		</button>
 	</div>
 
@@ -141,7 +153,7 @@
 							class="block py-3 text-sm text-stone-700"
 							onclick={() => (mobileOpen = false)}
 						>
-							Minha Confirmação
+							Minha confirmação de presença
 						</a>
 					</li>
 				{/if}

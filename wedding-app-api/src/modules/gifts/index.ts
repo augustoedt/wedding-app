@@ -1,7 +1,7 @@
 import { Elysia } from "elysia"
 import type { authGuard } from "../../lib/auth-guard"
 import type { createGiftsService } from "./service"
-import { createGiftBody, giftIdParams, updateGiftBody } from "./model"
+import { createGiftBody, giftIdParams, reorderGiftBody, updateGiftBody } from "./model"
 
 export function createGiftsRoutes({
   service,
@@ -54,5 +54,17 @@ export function createGiftsRoutes({
         return new Response(null, { status: 204 })
       },
       { params: giftIdParams }
+    )
+    .post(
+      "/gifts/:id/reorder",
+      async ({ session, params, body, status }) => {
+        const result = await service.reorderGift(session!.user.id, params.id, body.direction)
+        if ("error" in result) {
+          if (result.error === "not_found") return status(404, { message: "Gift not found" })
+          if (result.error === "forbidden") return status(403, { message: "Forbidden" })
+        }
+        return (result as { data: unknown }).data
+      },
+      { params: giftIdParams, body: reorderGiftBody }
     )
 }

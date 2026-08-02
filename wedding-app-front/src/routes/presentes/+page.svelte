@@ -22,7 +22,11 @@
 	async function loadMore() {
 		loadingMore = true;
 		try {
-			const result = await fetchGifts({ slug: PUBLIC_WEDDING_SLUG, page: currentPage + 1, limit: LIMIT });
+			const result = await fetchGifts({
+				slug: PUBLIC_WEDDING_SLUG,
+				page: currentPage + 1,
+				limit: LIMIT
+			});
 			gifts = [...gifts, ...result.items.filter((g) => g.paymentType !== null)];
 			currentPage += 1;
 		} finally {
@@ -39,9 +43,7 @@
 	}
 
 	function onGiftTaken(giftId: string) {
-		gifts = gifts.map((g) =>
-			g.id === giftId ? { ...g, isActive: false, lockedAt: null } : g
-		);
+		gifts = gifts.map((g) => (g.id === giftId ? { ...g, isActive: false, lockedAt: null } : g));
 		selectedGift = null;
 	}
 </script>

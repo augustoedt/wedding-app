@@ -1,0 +1,1 @@
+ALTER TABLE "guests" ADD COLUMN "confirmed_companions" integer DEFAULT 0 NOT NULL;

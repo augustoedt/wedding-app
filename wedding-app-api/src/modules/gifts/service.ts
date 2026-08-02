@@ -46,7 +46,31 @@ export function createGiftsService(database: Database) {
     ) {
       const wedding = await getWeddingForUser(userId)
       if (!wedding) return { error: "no_wedding" as const }
-      return { data: await repo.create({ ...data, weddingId: wedding.id }) }
+
+      const maxSortOrder = await repo.findMaxSortOrder(wedding.id)
+      const sortOrder = (maxSortOrder ?? 0) + 1000
+
+      return { data: await repo.create({ ...data, weddingId: wedding.id, sortOrder }) }
+    },
+
+    async reorderGift(userId: string, giftId: string, direction: "up" | "down") {
+      const gift = await repo.findById(giftId)
+      if (!gift) return { error: "not_found" as const }
+
+      const wedding = await weddingsRepo.findById(gift.weddingId)
+      if (!wedding || wedding.userId !== userId) return { error: "forbidden" as const }
+
+      const ordered = await repo.findByWeddingId(wedding.id)
+      const index = ordered.findIndex((g) => g.id === giftId)
+      const neighborIndex = direction === "up" ? index - 1 : index + 1
+      const neighbor = ordered[neighborIndex]
+
+      if (!neighbor) return { data: ordered }
+
+      await repo.update(gift.id, { sortOrder: neighbor.sortOrder })
+      await repo.update(neighbor.id, { sortOrder: gift.sortOrder })
+
+      return { data: await repo.findByWeddingId(wedding.id) }
     },
 
     async updateGift(

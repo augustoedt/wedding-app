@@ -59,19 +59,39 @@ export function createGuestsService(database: Database) {
       const wedding = await weddingsRepo.findById(guest.weddingId)
       if (!wedding || wedding.userId !== userId) return { error: "forbidden" as const }
 
-      return { data: await repo.update(guestId, data) }
+      // Confirmed companions only make sense while rsvp is "confirmed" — clear them on any other status.
+      const normalized = data.rsvp && data.rsvp !== "confirmed" ? { ...data, confirmedCompanions: 0 } : data
+
+      return { data: await repo.update(guestId, normalized) }
     },
 
     async getGuestByToken(token: string) {
       const guest = await repo.findByRsvpToken(token)
       if (!guest) return { error: "not_found" as const }
-      return { data: { name: guest.name, rsvp: guest.rsvp } }
+      return {
+        data: {
+          name: guest.name,
+          rsvp: guest.rsvp,
+          allowedCompanions: guest.plusOne,
+          confirmedCompanions: guest.confirmedCompanions,
+        },
+      }
     },
 
-    async confirmRsvpByToken(token: string, rsvp: "confirmed" | "declined") {
+    async confirmRsvpByToken(token: string, rsvp: "confirmed" | "declined", companions?: number) {
       const guest = await repo.findByRsvpToken(token)
       if (!guest) return { error: "not_found" as const }
-      return { data: await repo.update(guest.id, { rsvp }) }
+
+      if (rsvp === "declined") {
+        return { data: await repo.update(guest.id, { rsvp, confirmedCompanions: 0 }) }
+      }
+
+      const requested = companions ?? 0
+      if (requested > guest.plusOne) {
+        return { error: "companions_over_limit" as const, allowed: guest.plusOne }
+      }
+
+      return { data: await repo.update(guest.id, { rsvp, confirmedCompanions: requested }) }
     },
 
     async deleteGuest(userId: string, guestId: string) {

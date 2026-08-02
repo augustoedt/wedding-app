@@ -267,6 +267,95 @@ describe("service integration", () => {
       .where(eq(giftPayments.id, "p-1"))
     expect(payment?.status).toBe("expired")
   })
+
+  it("gifts service assigns increasing sortOrder 1000 apart to new gifts", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-1")
+    await seedWedding({ id: "w-1", userId: "u-1", slug: "slug-sort" })
+
+    const service = createGiftsService(testDb)
+    const first = await service.createGift("u-1", { name: "Primeiro", price: 1000 })
+    const second = await service.createGift("u-1", { name: "Segundo", price: 1000 })
+    const third = await service.createGift("u-1", { name: "Terceiro", price: 1000 })
+
+    expect("data" in first && first.data?.sortOrder).toBe(1000)
+    expect("data" in second && second.data?.sortOrder).toBe(2000)
+    expect("data" in third && third.data?.sortOrder).toBe(3000)
+
+    const list = await service.listGifts("u-1")
+    expect("data" in list && list.data?.map((g) => g.name)).toEqual([
+      "Primeiro",
+      "Segundo",
+      "Terceiro",
+    ])
+  })
+
+  it("gifts service keeps sortOrder independent per wedding", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-1")
+    await seedUser("u-2")
+    await seedWedding({ id: "w-1", userId: "u-1", slug: "slug-sort-a" })
+    await seedWedding({ id: "w-2", userId: "u-2", slug: "slug-sort-b" })
+
+    const serviceA = createGiftsService(testDb)
+    const first = await serviceA.createGift("u-1", { name: "A1", price: 1000 })
+    const serviceB = createGiftsService(testDb)
+    const other = await serviceB.createGift("u-2", { name: "B1", price: 1000 })
+
+    expect("data" in first && first.data?.sortOrder).toBe(1000)
+    expect("data" in other && other.data?.sortOrder).toBe(1000)
+  })
+
+  it("gifts service moves a gift up and down within its wedding", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-1")
+    await seedWedding({ id: "w-1", userId: "u-1", slug: "slug-reorder" })
+
+    const service = createGiftsService(testDb)
+    const first = await service.createGift("u-1", { name: "Primeiro", price: 1000 })
+    const second = await service.createGift("u-1", { name: "Segundo", price: 1000 })
+    await service.createGift("u-1", { name: "Terceiro", price: 1000 })
+    const firstId = "data" in first && first.data ? first.data.id : ""
+    const secondId = "data" in second && second.data ? second.data.id : ""
+
+    const moved = await service.reorderGift("u-1", secondId, "up")
+    expect("data" in moved && moved.data?.map((g) => g.name)).toEqual([
+      "Segundo",
+      "Primeiro",
+      "Terceiro",
+    ])
+
+    const movedBack = await service.reorderGift("u-1", secondId, "down")
+    expect("data" in movedBack && movedBack.data?.map((g) => g.name)).toEqual([
+      "Primeiro",
+      "Segundo",
+      "Terceiro",
+    ])
+
+    const noop = await service.reorderGift("u-1", firstId, "up")
+    expect("data" in noop && noop.data?.map((g) => g.name)).toEqual([
+      "Primeiro",
+      "Segundo",
+      "Terceiro",
+    ])
+  })
+
+  it("gifts service blocks reorder by non-owner", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-owner")
+    await seedUser("u-other")
+    await seedWedding({ id: "w-1", userId: "u-owner", slug: "slug-reorder-forbidden" })
+    await seedGift({ id: "g-1", weddingId: "w-1" })
+
+    const service = createGiftsService(testDb)
+    const result = await service.reorderGift("u-other", "g-1", "up")
+
+    expect(result).toEqual({ error: "forbidden" })
+  })
 })
 
 describe("routes integration", () => {
@@ -510,6 +599,155 @@ describe("routes integration", () => {
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body.rsvp).toBe("confirmed")
+  })
+
+  it("confirms rsvp with companions within the allowed limit", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-1")
+    await seedWedding({ id: "w-1", userId: "u-1", slug: "slug-companions" })
+
+    const guestsService = createGuestsService(testDb)
+    const createResult = await guestsService.createGuest("u-1", { name: "Maria", plusOne: 3 })
+    const guest = "data" in createResult ? createResult.data : null
+    if (!guest) throw new Error("Expected guest data")
+
+    const app = new Elysia().use(
+      createPublicRoutes({ service: createPublicService(testDb), guestsService })
+    )
+
+    const res = await app.handle(
+      jsonRequest(`http://localhost/public/rsvp/${guest.rsvpToken}`, "POST", {
+        rsvp: "confirmed",
+        companions: 1,
+      })
+    )
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.rsvp).toBe("confirmed")
+    expect(body.confirmedCompanions).toBe(1)
+  })
+
+  it("rejects confirmation when companions exceed the allowed limit", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-1")
+    await seedWedding({ id: "w-1", userId: "u-1", slug: "slug-over-limit" })
+
+    const guestsService = createGuestsService(testDb)
+    const createResult = await guestsService.createGuest("u-1", { name: "Maria", plusOne: 2 })
+    const guest = "data" in createResult ? createResult.data : null
+    if (!guest) throw new Error("Expected guest data")
+
+    const app = new Elysia().use(
+      createPublicRoutes({ service: createPublicService(testDb), guestsService })
+    )
+
+    const res = await app.handle(
+      jsonRequest(`http://localhost/public/rsvp/${guest.rsvpToken}`, "POST", {
+        rsvp: "confirmed",
+        companions: 3,
+      })
+    )
+    expect(res.status).toBe(422)
+    const body = await res.json()
+    expect(body.message).toBe("Você pode confirmar no máximo 2 acompanhante(s).")
+
+    const rows = await testDb.select().from(guests).where(eq(guests.id, guest.id))
+    expect(rows[0]?.rsvp).toBe("pending")
+    expect(rows[0]?.confirmedCompanions).toBe(0)
+  })
+
+  it("rejects negative and fractional companions at the schema level", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-1")
+    await seedWedding({ id: "w-1", userId: "u-1", slug: "slug-invalid-companions" })
+
+    const guestsService = createGuestsService(testDb)
+    const createResult = await guestsService.createGuest("u-1", { name: "Maria", plusOne: 2 })
+    const guest = "data" in createResult ? createResult.data : null
+    if (!guest) throw new Error("Expected guest data")
+
+    const app = new Elysia().use(
+      createPublicRoutes({ service: createPublicService(testDb), guestsService })
+    )
+
+    const negative = await app.handle(
+      jsonRequest(`http://localhost/public/rsvp/${guest.rsvpToken}`, "POST", {
+        rsvp: "confirmed",
+        companions: -1,
+      })
+    )
+    expect(negative.status).toBe(422)
+
+    const fractional = await app.handle(
+      jsonRequest(`http://localhost/public/rsvp/${guest.rsvpToken}`, "POST", {
+        rsvp: "confirmed",
+        companions: 1.5,
+      })
+    )
+    expect(fractional.status).toBe(422)
+
+    const notNumeric = await app.handle(
+      jsonRequest(`http://localhost/public/rsvp/${guest.rsvpToken}`, "POST", {
+        rsvp: "confirmed",
+        companions: "two",
+      })
+    )
+    expect(notNumeric.status).toBe(422)
+  })
+
+  it("resets confirmedCompanions to zero when the guest declines", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-1")
+    await seedWedding({ id: "w-1", userId: "u-1", slug: "slug-decline" })
+
+    const guestsService = createGuestsService(testDb)
+    const createResult = await guestsService.createGuest("u-1", { name: "Maria", plusOne: 2 })
+    const guest = "data" in createResult ? createResult.data : null
+    if (!guest) throw new Error("Expected guest data")
+
+    const app = new Elysia().use(
+      createPublicRoutes({ service: createPublicService(testDb), guestsService })
+    )
+
+    await app.handle(
+      jsonRequest(`http://localhost/public/rsvp/${guest.rsvpToken}`, "POST", {
+        rsvp: "confirmed",
+        companions: 2,
+      })
+    )
+
+    const declineRes = await app.handle(
+      jsonRequest(`http://localhost/public/rsvp/${guest.rsvpToken}`, "POST", {
+        rsvp: "declined",
+      })
+    )
+    expect(declineRes.status).toBe(200)
+    const body = await declineRes.json()
+    expect(body.rsvp).toBe("declined")
+    expect(body.confirmedCompanions).toBe(0)
+  })
+
+  it("admin updateGuest clears confirmedCompanions when rsvp moves away from confirmed", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-1")
+    await seedWedding({ id: "w-1", userId: "u-1", slug: "slug-admin-reset" })
+
+    const guestsService = createGuestsService(testDb)
+    const createResult = await guestsService.createGuest("u-1", { name: "Maria", plusOne: 2 })
+    const guest = "data" in createResult ? createResult.data : null
+    if (!guest) throw new Error("Expected guest data")
+
+    await guestsService.confirmRsvpByToken(guest.rsvpToken!, "confirmed", 2)
+
+    const updateResult = await guestsService.updateGuest("u-1", guest.id, { rsvp: "pending" })
+    const updated = "data" in updateResult ? updateResult.data : null
+    expect(updated?.rsvp).toBe("pending")
+    expect(updated?.confirmedCompanions).toBe(0)
   })
 })
 

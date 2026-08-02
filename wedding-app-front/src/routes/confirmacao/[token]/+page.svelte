@@ -3,30 +3,61 @@
 	import { confirmRsvpByToken } from '$lib/wedding.remote';
 	import { saveToken } from '$lib/rsvp-store';
 	import WeddingLayout from '$lib/components/WeddingLayout.svelte';
-	import type { Guest } from '$lib/server/api';
 
 	let { data } = $props();
 	const token = untrack(() => data.token);
 	const wedding = untrack(() => data.wedding);
+	const guestRsvp = untrack(() => data.guestRsvp);
+	const allowedCompanions = untrack(() => guestRsvp?.allowedCompanions ?? 0);
+	const invalidToken = guestRsvp === null;
 
 	onMount(() => {
 		saveToken(token);
 	});
 
 	type Step = 'choice' | 'success' | 'error';
-	let step = $state<Step>('choice');
+	let step = $state<Step>(
+		invalidToken ? 'error' : guestRsvp!.rsvp !== 'pending' ? 'success' : 'choice'
+	);
 	let loading = $state(false);
-	let guest = $state<Guest | null>(null);
-	let resultRsvp = $state<'confirmed' | 'declined' | null>(null);
+	let formError = $state('');
+	let guestName = $state(guestRsvp?.name ?? '');
+	let resultRsvp = $state<'confirmed' | 'declined' | null>(
+		guestRsvp && guestRsvp.rsvp !== 'pending' ? guestRsvp.rsvp : null
+	);
+	let confirmedCompanionsShown = $state(guestRsvp?.confirmedCompanions ?? 0);
+
+	let companions = $state(
+		guestRsvp && guestRsvp.rsvp === 'confirmed' ? guestRsvp.confirmedCompanions : allowedCompanions
+	);
 
 	async function handleRsvp(rsvp: 'confirmed' | 'declined') {
+		formError = '';
+
+		if (rsvp === 'confirmed' && allowedCompanions > 0) {
+			if (!Number.isInteger(companions) || companions < 0) {
+				formError = 'Informe uma quantidade válida de acompanhantes.';
+				return;
+			}
+			if (companions > allowedCompanions) {
+				formError = `Você pode confirmar no máximo ${allowedCompanions} acompanhante(s).`;
+				return;
+			}
+		}
+
 		loading = true;
 		try {
-			guest = await confirmRsvpByToken({ token, rsvp });
+			const result = await confirmRsvpByToken({
+				token,
+				rsvp,
+				companions: rsvp === 'confirmed' ? companions : undefined
+			});
+			guestName = result.name;
+			confirmedCompanionsShown = result.confirmedCompanions;
 			resultRsvp = rsvp;
 			step = 'success';
-		} catch {
-			step = 'error';
+		} catch (e) {
+			formError = e instanceof Error ? e.message : 'Não foi possível registrar sua resposta.';
 		} finally {
 			loading = false;
 		}
@@ -76,15 +107,38 @@
 
 		<div class="w-full max-w-sm rounded-2xl border border-stone-100 bg-white px-8 py-10 shadow-sm">
 			{#if step === 'choice'}
-				<p class="mb-8 text-center text-sm leading-relaxed text-stone-500">
+				<p class="mb-6 text-center text-sm leading-relaxed text-stone-500">
 					Faça parte da nossa história de amor.<br />Confirme sua presença abaixo.
 				</p>
+
+				{#if allowedCompanions > 0}
+					<div class="mb-6 text-left">
+						<label for="companions" class="mb-1 block text-sm font-medium text-stone-600">
+							Quantos acompanhantes irão com você?
+						</label>
+						<p class="mb-2 text-xs text-stone-400">
+							Não inclui você. Máximo permitido: {allowedCompanions}.
+						</p>
+						<input
+							id="companions"
+							type="number"
+							min="0"
+							max={allowedCompanions}
+							bind:value={companions}
+							class="w-24 rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-700"
+						/>
+					</div>
+				{/if}
+
+				{#if formError}
+					<p class="mb-4 text-center text-sm text-red-600">{formError}</p>
+				{/if}
 
 				<div class="flex flex-col gap-3">
 					<button
 						onclick={() => handleRsvp('confirmed')}
 						disabled={loading}
-						class="rounded-lg bg-stone-800 py-3.5 text-sm font-medium tracking-widest uppercase text-white transition hover:bg-stone-700 disabled:opacity-50"
+						class="rounded-lg bg-stone-800 py-3.5 text-sm font-medium tracking-widest text-white uppercase transition hover:bg-stone-700 disabled:opacity-50"
 					>
 						{loading ? 'Enviando...' : 'Confirmar presença'}
 					</button>
@@ -92,12 +146,11 @@
 					<button
 						onclick={() => handleRsvp('declined')}
 						disabled={loading}
-						class="rounded-lg border border-stone-300 bg-white py-3.5 text-sm font-medium tracking-widest uppercase text-stone-600 transition hover:bg-stone-50 disabled:opacity-50"
+						class="rounded-lg border border-stone-300 bg-white py-3.5 text-sm font-medium tracking-widest text-stone-600 uppercase transition hover:bg-stone-50 disabled:opacity-50"
 					>
 						{loading ? 'Enviando...' : 'Não poderei comparecer'}
 					</button>
 				</div>
-
 			{:else if step === 'success'}
 				<div class="flex flex-col items-center gap-4 py-2 text-center">
 					{#if resultRsvp === 'confirmed'}
@@ -117,10 +170,17 @@
 								/>
 							</svg>
 						</div>
-						<h2 class="font-serif text-4xl text-stone-700">{guest?.name ?? 'Obrigado'}!</h2>
+						<h2 class="font-serif text-4xl text-stone-700">{guestName || 'Obrigado'}!</h2>
 						<p class="text-sm leading-relaxed text-stone-500">
 							Sua presença foi confirmada.<br />Estamos muito felizes! Até lá. 🤍
 						</p>
+						{#if allowedCompanions > 0}
+							<p class="text-sm text-stone-500">
+								{confirmedCompanionsShown > 0
+									? `+ ${confirmedCompanionsShown} acompanhante${confirmedCompanionsShown > 1 ? 's' : ''} confirmado${confirmedCompanionsShown > 1 ? 's' : ''}.`
+									: 'Você confirmou presença sozinho(a).'}
+							</p>
+						{/if}
 					{:else}
 						<div class="flex h-16 w-16 items-center justify-center rounded-full bg-stone-100">
 							<svg
@@ -138,13 +198,19 @@
 								<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" />
 							</svg>
 						</div>
-						<h2 class="font-serif text-4xl text-stone-700">Que pena, {guest?.name ?? ''}!</h2>
+						<h2 class="font-serif text-4xl text-stone-700">Que pena, {guestName}!</h2>
 						<p class="text-sm leading-relaxed text-stone-500">
 							Sentiremos sua falta.<br />Obrigado por nos avisar!
 						</p>
 					{/if}
 				</div>
 
+				<button
+					onclick={() => (step = 'choice')}
+					class="mt-6 block w-full text-center text-sm text-stone-500 underline hover:text-stone-700"
+				>
+					Alterar resposta
+				</button>
 			{:else if step === 'error'}
 				<div class="flex flex-col items-center gap-4 py-2 text-center">
 					<div class="flex h-16 w-16 items-center justify-center rounded-full bg-red-50">
@@ -158,14 +224,9 @@
 						</svg>
 					</div>
 					<p class="text-sm text-stone-500">
-						Não foi possível registrar sua resposta.<br />O link pode ter expirado ou ser inválido.
+						Não foi possível encontrar sua confirmação.<br />O link pode ter expirado ou ser
+						inválido.
 					</p>
-					<button
-						onclick={() => (step = 'choice')}
-						class="text-sm text-stone-500 underline hover:text-stone-700"
-					>
-						Tentar novamente
-					</button>
 				</div>
 			{/if}
 		</div>

@@ -12,6 +12,7 @@ export type Guest = {
 	phone?: string | null;
 	rsvp: RsvpStatus;
 	plusOne: number;
+	confirmedCompanions: number;
 	inviteSent: boolean;
 	rsvpToken?: string | null;
 	createdAt: string;
@@ -49,7 +50,4 @@ export const updateGuest = command(
 	async ({ id, ...body }) => apiPut<Guest>(`/admin/guests/${id}`, body)
 );
 
-export const deleteGuest = command(
-	v.string(),
-	async (id) => apiDelete(`/admin/guests/${id}`)
-);
+export const deleteGuest = command(v.string(), async (id) => apiDelete(`/admin/guests/${id}`));

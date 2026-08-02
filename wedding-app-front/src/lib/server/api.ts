@@ -29,6 +29,14 @@ export interface Guest {
 	phone: string | null;
 	rsvp: 'pending' | 'confirmed' | 'declined';
 	plusOne: number;
+	confirmedCompanions: number;
+}
+
+export interface GuestRsvpStatus {
+	name: string;
+	rsvp: 'pending' | 'confirmed' | 'declined';
+	allowedCompanions: number;
+	confirmedCompanions: number;
 }
 
 export interface Gift {
@@ -77,9 +85,7 @@ export async function getGifts(
 	if (params?.page) qs.set('page', String(params.page));
 	if (params?.limit) qs.set('limit', String(params.limit));
 	const query = qs.toString();
-	const res = await fetchFn(
-		`${API_URL}/public/weddings/${slug}/gifts${query ? `?${query}` : ''}`
-	);
+	const res = await fetchFn(`${API_URL}/public/weddings/${slug}/gifts${query ? `?${query}` : ''}`);
 	if (!res.ok) throw new Error(`Gifts fetch failed: ${res.status}`);
 	return res.json();
 }
@@ -107,15 +113,29 @@ export async function getMessages(
 	return res.json();
 }
 
+export async function getGuestRsvp(
+	token: string,
+	fetchFn: typeof fetch = fetch
+): Promise<GuestRsvpStatus | null> {
+	const res = await fetchFn(`${API_URL}/public/rsvp/${token}`);
+	if (res.status === 404) return null;
+	if (!res.ok) throw new Error(`RSVP lookup failed: ${res.status}`);
+	return res.json();
+}
+
 export async function confirmRsvpByToken(
 	token: string,
-	rsvp: 'confirmed' | 'declined'
+	rsvp: 'confirmed' | 'declined',
+	companions?: number
 ): Promise<Guest> {
 	const res = await fetch(`${API_URL}/public/rsvp/${token}`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ rsvp })
+		body: JSON.stringify({ rsvp, companions })
 	});
-	if (!res.ok) throw new Error(`Token RSVP failed: ${res.status}`);
+	if (!res.ok) {
+		const body = await res.json().catch(() => null);
+		throw new Error(body?.message ?? `Token RSVP failed: ${res.status}`);
+	}
 	return res.json();
 }
