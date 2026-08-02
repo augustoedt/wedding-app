@@ -1,17 +1,6 @@
 import { query, command } from '$app/server';
 import * as v from 'valibot';
-import { getGifts, lockGift, confirmRsvpByToken as apiConfirmRsvpByToken } from '$lib/server/api';
-
-export const fetchGifts = query(
-	v.object({
-		slug: v.string(),
-		page: v.optional(v.number()),
-		limit: v.optional(v.number())
-	}),
-	async ({ slug, page, limit }) => {
-		return getGifts(slug, { page, limit });
-	}
-);
+import { lockGift, confirmRsvpByToken as apiConfirmRsvpByToken } from '$lib/server/api';
 
 export const lockGiftRemote = command(
 	v.object({

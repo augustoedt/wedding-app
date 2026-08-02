@@ -1,37 +1,35 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import { fetchGifts } from '$lib/wedding.remote';
+	import { goto } from '$app/navigation';
 	import { PUBLIC_WEDDING_SLUG } from '$env/static/public';
 	import type { Gift } from '$lib/server/api';
 	import WeddingLayout from '$lib/components/WeddingLayout.svelte';
 	import GiftCard from '$lib/components/GiftCard.svelte';
 	import GiftModal from '$lib/components/GiftModal.svelte';
 
-	const LIMIT = 20;
+	const LIMIT = 12;
 
 	let { data } = $props();
 	const wedding = untrack(() => data.wedding);
-	const giftsPage = untrack(() => data.giftsPage);
-	let gifts = $state<Gift[]>(giftsPage.items);
-	let total = $state(giftsPage.total);
-	let currentPage = $state(1);
-	let loadingMore = $state(false);
 
-	const hasMore = $derived(currentPage * LIMIT < total);
+	let gifts = $state<Gift[]>(untrack(() => data.giftsPage.items));
+	let total = $state(untrack(() => data.giftsPage.total));
+	let currentPage = $state(untrack(() => data.page));
+	let navigating = $state(false);
 
-	async function loadMore() {
-		loadingMore = true;
-		try {
-			const result = await fetchGifts({
-				slug: PUBLIC_WEDDING_SLUG,
-				page: currentPage + 1,
-				limit: LIMIT
-			});
-			gifts = [...gifts, ...result.items];
-			currentPage += 1;
-		} finally {
-			loadingMore = false;
-		}
+	$effect(() => {
+		gifts = data.giftsPage.items;
+		total = data.giftsPage.total;
+		currentPage = data.page;
+		navigating = false;
+	});
+
+	const totalPages = $derived(Math.max(1, Math.ceil(total / LIMIT)));
+
+	async function goToPage(p: number) {
+		if (p < 1 || p > totalPages || p === currentPage) return;
+		navigating = true;
+		await goto(`?page=${p}`);
 	}
 
 	let selectedGift = $state<Gift | null>(null);
@@ -81,20 +79,33 @@
 					<p>Nenhum presente disponível no momento.</p>
 				</div>
 			{:else}
-				<div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:gap-6 lg:grid-cols-4">
+				<div
+					class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:gap-6 lg:grid-cols-4"
+					class:opacity-50={navigating}
+				>
 					{#each gifts as gift (gift.id)}
 						<GiftCard {gift} onBuy={(g) => (selectedGift = g)} />
 					{/each}
 				</div>
 
-				{#if hasMore}
-					<div class="mt-10 flex justify-center">
+				{#if totalPages > 1}
+					<div class="mt-10 flex items-center justify-center gap-4">
 						<button
-							onclick={loadMore}
-							disabled={loadingMore}
-							class="rounded-lg border border-stone-300 px-6 py-2.5 text-sm font-medium text-stone-700 transition hover:bg-stone-50 disabled:opacity-50"
+							onclick={() => goToPage(currentPage - 1)}
+							disabled={navigating || currentPage <= 1}
+							class="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-50 disabled:opacity-40"
 						>
-							{loadingMore ? 'Carregando...' : 'Carregar mais'}
+							Anterior
+						</button>
+						<span class="text-sm text-stone-500">
+							Página {currentPage} de {totalPages}
+						</span>
+						<button
+							onclick={() => goToPage(currentPage + 1)}
+							disabled={navigating || currentPage >= totalPages}
+							class="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-50 disabled:opacity-40"
+						>
+							Próxima
 						</button>
 					</div>
 				{/if}
