@@ -2,7 +2,14 @@ import { beforeAll, afterAll, beforeEach, describe, expect, it } from "bun:test"
 import { Elysia } from "elysia"
 import { eq } from "drizzle-orm"
 import { authGuard } from "../src/lib/auth-guard"
-import { giftPayments, guestMessages, guests, gifts, user, weddings } from "../src/db/schema"
+import {
+  giftPayments,
+  guestMessages,
+  guests,
+  gifts,
+  user,
+  weddings,
+} from "../src/db/schema"
 import { createGiftsRoutes } from "../src/modules/gifts"
 import { createGiftsService } from "../src/modules/gifts/service"
 import { createGuestsRoutes } from "../src/modules/guests"
@@ -26,13 +33,16 @@ const now = new Date()
 let integrationDbAvailable = false
 
 function createAuthenticatedGuard(userId: string) {
-  return new Elysia({ name: "test-auth-guard" }).derive({ as: "scoped" }, () => ({
-    session: {
-      user: {
-        id: userId,
+  return new Elysia({ name: "test-auth-guard" }).derive(
+    { as: "scoped" },
+    () => ({
+      session: {
+        user: {
+          id: userId,
+        },
       },
-    },
-  }))
+    }),
+  )
 }
 
 function jsonRequest(url: string, method: string, body: unknown) {
@@ -169,7 +179,7 @@ beforeAll(async () => {
   } catch (error) {
     console.warn(
       "Skipping db.integration.test.ts because test database is unavailable:",
-      error
+      error,
     )
   }
 })
@@ -230,7 +240,9 @@ describe("service integration", () => {
     })
 
     expect("data" in result && result.data.paymentType).toBe("pix")
-    expect("data" in result && result.data.paymentValue).toBe("contato@email.com")
+    expect("data" in result && result.data.paymentValue).toBe(
+      "contato@email.com",
+    )
   })
 
   it("gifts service marks a gift as purchased via status update", async () => {
@@ -241,7 +253,9 @@ describe("service integration", () => {
     await seedGift({ id: "g-1", weddingId: "w-1", active: true })
 
     const service = createGiftsService(testDb)
-    const result = await service.updateGift("u-1", "g-1", { status: "purchased" })
+    const result = await service.updateGift("u-1", "g-1", {
+      status: "purchased",
+    })
 
     expect("data" in result && result.data?.isActive).toBe(false)
     expect("data" in result && result.data?.lockedAt).toBeNull()
@@ -252,11 +266,18 @@ describe("service integration", () => {
 
     await seedUser("u-1")
     await seedWedding({ id: "w-1", userId: "u-1", slug: "slug-1" })
-    await seedGift({ id: "g-1", weddingId: "w-1", active: false, lockedAt: now })
+    await seedGift({
+      id: "g-1",
+      weddingId: "w-1",
+      active: false,
+      lockedAt: now,
+    })
     await seedGiftPayment({ id: "p-1", giftId: "g-1", weddingId: "w-1" })
 
     const service = createGiftsService(testDb)
-    const result = await service.updateGift("u-1", "g-1", { status: "available" })
+    const result = await service.updateGift("u-1", "g-1", {
+      status: "available",
+    })
 
     expect("data" in result && result.data?.isActive).toBe(true)
     expect("data" in result && result.data?.lockedAt).toBeNull()
@@ -275,9 +296,18 @@ describe("service integration", () => {
     await seedWedding({ id: "w-1", userId: "u-1", slug: "slug-sort" })
 
     const service = createGiftsService(testDb)
-    const first = await service.createGift("u-1", { name: "Primeiro", price: 1000 })
-    const second = await service.createGift("u-1", { name: "Segundo", price: 1000 })
-    const third = await service.createGift("u-1", { name: "Terceiro", price: 1000 })
+    const first = await service.createGift("u-1", {
+      name: "Primeiro",
+      price: 1000,
+    })
+    const second = await service.createGift("u-1", {
+      name: "Segundo",
+      price: 1000,
+    })
+    const third = await service.createGift("u-1", {
+      name: "Terceiro",
+      price: 1000,
+    })
 
     expect("data" in first && first.data?.sortOrder).toBe(1000)
     expect("data" in second && second.data?.sortOrder).toBe(2000)
@@ -308,39 +338,120 @@ describe("service integration", () => {
     expect("data" in other && other.data?.sortOrder).toBe(1000)
   })
 
-  it("gifts service moves a gift up and down within its wedding", async () => {
+  it("gifts service moves a gift between two others via beforeId/afterId", async () => {
     if (!integrationDbAvailable) return
 
     await seedUser("u-1")
     await seedWedding({ id: "w-1", userId: "u-1", slug: "slug-reorder" })
 
     const service = createGiftsService(testDb)
-    const first = await service.createGift("u-1", { name: "Primeiro", price: 1000 })
-    const second = await service.createGift("u-1", { name: "Segundo", price: 1000 })
-    await service.createGift("u-1", { name: "Terceiro", price: 1000 })
+    const first = await service.createGift("u-1", {
+      name: "Primeiro",
+      price: 1000,
+    })
+    const second = await service.createGift("u-1", {
+      name: "Segundo",
+      price: 1000,
+    })
+    const third = await service.createGift("u-1", {
+      name: "Terceiro",
+      price: 1000,
+    })
     const firstId = "data" in first && first.data ? first.data.id : ""
     const secondId = "data" in second && second.data ? second.data.id : ""
+    const thirdId = "data" in third && third.data ? third.data.id : ""
 
-    const moved = await service.reorderGift("u-1", secondId, "up")
+    // Move "Terceiro" between "Primeiro" and "Segundo".
+    const moved = await service.reorderGift("u-1", thirdId, {
+      afterId: firstId,
+      beforeId: secondId,
+    })
     expect("data" in moved && moved.data?.map((g) => g.name)).toEqual([
-      "Segundo",
       "Primeiro",
       "Terceiro",
+      "Segundo",
+    ])
+  })
+
+  it("gifts service moves a gift to the start and end of the list", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-1")
+    await seedWedding({ id: "w-1", userId: "u-1", slug: "slug-reorder-edges" })
+
+    const service = createGiftsService(testDb)
+    const first = await service.createGift("u-1", {
+      name: "Primeiro",
+      price: 1000,
+    })
+    const second = await service.createGift("u-1", {
+      name: "Segundo",
+      price: 1000,
+    })
+    const secondId = "data" in second && second.data ? second.data.id : ""
+    const firstId = "data" in first && first.data ? first.data.id : ""
+
+    const toStart = await service.reorderGift("u-1", secondId, {
+      afterId: firstId,
+    })
+    expect("data" in toStart && toStart.data?.map((g) => g.name)).toEqual([
+      "Segundo",
+      "Primeiro",
     ])
 
-    const movedBack = await service.reorderGift("u-1", secondId, "down")
-    expect("data" in movedBack && movedBack.data?.map((g) => g.name)).toEqual([
+    const toEnd = await service.reorderGift("u-1", secondId, {
+      beforeId: firstId,
+    })
+    expect("data" in toEnd && toEnd.data?.map((g) => g.name)).toEqual([
       "Primeiro",
       "Segundo",
-      "Terceiro",
+    ])
+  })
+
+  it("gifts service renumbers when there is no room between neighbors", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-1")
+    await seedWedding({
+      id: "w-1",
+      userId: "u-1",
+      slug: "slug-reorder-renumber",
+    })
+    await seedGift({ id: "g-a", weddingId: "w-1" })
+    await seedGift({ id: "g-b", weddingId: "w-1" })
+    await seedGift({ id: "g-c", weddingId: "w-1" })
+
+    await testDb
+      .update(gifts)
+      .set({ sortOrder: 1000 })
+      .where(eq(gifts.id, "g-a"))
+    await testDb
+      .update(gifts)
+      .set({ sortOrder: 1001 })
+      .where(eq(gifts.id, "g-b"))
+    await testDb
+      .update(gifts)
+      .set({ sortOrder: 2000 })
+      .where(eq(gifts.id, "g-c"))
+
+    const service = createGiftsService(testDb)
+    const result = await service.reorderGift("u-1", "g-c", {
+      afterId: "g-a",
+      beforeId: "g-b",
+    })
+
+    expect("data" in result && result.data?.map((g) => g.id)).toEqual([
+      "g-a",
+      "g-c",
+      "g-b",
     ])
 
-    const noop = await service.reorderGift("u-1", firstId, "up")
-    expect("data" in noop && noop.data?.map((g) => g.name)).toEqual([
-      "Primeiro",
-      "Segundo",
-      "Terceiro",
-    ])
+    const rows = await testDb
+      .select()
+      .from(gifts)
+      .where(eq(gifts.weddingId, "w-1"))
+    const sortOrders = rows.map((g) => g.sortOrder)
+    expect(new Set(sortOrders).size).toBe(3)
   })
 
   it("gifts service blocks reorder by non-owner", async () => {
@@ -348,11 +459,44 @@ describe("service integration", () => {
 
     await seedUser("u-owner")
     await seedUser("u-other")
-    await seedWedding({ id: "w-1", userId: "u-owner", slug: "slug-reorder-forbidden" })
+    await seedWedding({
+      id: "w-1",
+      userId: "u-owner",
+      slug: "slug-reorder-forbidden",
+    })
     await seedGift({ id: "g-1", weddingId: "w-1" })
+    await seedGift({ id: "g-2", weddingId: "w-1" })
 
     const service = createGiftsService(testDb)
-    const result = await service.reorderGift("u-other", "g-1", "up")
+    const result = await service.reorderGift("u-other", "g-1", {
+      afterId: "g-2",
+    })
+
+    expect(result).toEqual({ error: "forbidden" })
+  })
+
+  it("gifts service blocks reorder against a gift from another wedding", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-1")
+    await seedUser("u-2")
+    await seedWedding({
+      id: "w-1",
+      userId: "u-1",
+      slug: "slug-reorder-cross-a",
+    })
+    await seedWedding({
+      id: "w-2",
+      userId: "u-2",
+      slug: "slug-reorder-cross-b",
+    })
+    await seedGift({ id: "g-mine", weddingId: "w-1" })
+    await seedGift({ id: "g-other", weddingId: "w-2" })
+
+    const service = createGiftsService(testDb)
+    const result = await service.reorderGift("u-1", "g-mine", {
+      afterId: "g-other",
+    })
 
     expect(result).toEqual({ error: "forbidden" })
   })
@@ -367,20 +511,24 @@ describe("routes integration", () => {
     const app = new Elysia().use(
       createWeddingsRoutes({
         service: createWeddingsService(testDb),
-        guard: createAuthenticatedGuard("u-admin") as unknown as typeof authGuard,
-      })
+        guard: createAuthenticatedGuard(
+          "u-admin",
+        ) as unknown as typeof authGuard,
+      }),
     )
 
     const createResponse = await app.handle(
       jsonRequest("http://localhost/admin/wedding", "POST", {
         title: "Casamento",
         slug: "casamento-admin",
-      })
+      }),
     )
 
     expect(createResponse.status).toBe(201)
 
-    const meResponse = await app.handle(new Request("http://localhost/admin/wedding/me"))
+    const meResponse = await app.handle(
+      new Request("http://localhost/admin/wedding/me"),
+    )
     expect(meResponse.status).toBe(200)
 
     const payload = await meResponse.json()
@@ -392,18 +540,22 @@ describe("routes integration", () => {
 
     await seedUser("u-1")
     await seedUser("u-2")
-    await seedWedding({ id: "w-existing", userId: "u-2", slug: "slug-ocupado" })
+    await seedWedding({
+      id: "w-existing",
+      userId: "u-2",
+      slug: "slug-ocupado",
+    })
 
     const guard = createAuthenticatedGuard("u-1") as unknown as typeof authGuard
     const app = new Elysia().use(
-      createWeddingsRoutes({ service: createWeddingsService(testDb), guard })
+      createWeddingsRoutes({ service: createWeddingsService(testDb), guard }),
     )
 
     const res = await app.handle(
       jsonRequest("http://localhost/admin/wedding", "POST", {
         title: "Outro Casamento",
         slug: "slug-ocupado",
-      })
+      }),
     )
     expect(res.status).toBe(409)
   })
@@ -416,14 +568,14 @@ describe("routes integration", () => {
 
     const guard = createAuthenticatedGuard("u-1") as unknown as typeof authGuard
     const app = new Elysia().use(
-      createWeddingsRoutes({ service: createWeddingsService(testDb), guard })
+      createWeddingsRoutes({ service: createWeddingsService(testDb), guard }),
     )
 
     const res = await app.handle(
       jsonRequest("http://localhost/admin/wedding", "POST", {
         title: "Segundo Casamento",
         slug: "outro-slug",
-      })
+      }),
     )
     expect(res.status).toBe(409)
   })
@@ -436,7 +588,7 @@ describe("routes integration", () => {
 
     const guard = createAuthenticatedGuard("u-1") as unknown as typeof authGuard
     const app = new Elysia().use(
-      createWeddingsRoutes({ service: createWeddingsService(testDb), guard })
+      createWeddingsRoutes({ service: createWeddingsService(testDb), guard }),
     )
 
     const res = await app.handle(
@@ -447,7 +599,7 @@ describe("routes integration", () => {
         venueCep: "01310-100",
         dressCodeGuests: "Traje social esporte fino",
         ogImage: "https://example.com/og.jpg",
-      })
+      }),
     )
     expect(res.status).toBe(200)
     const body = await res.json()
@@ -466,13 +618,17 @@ describe("routes integration", () => {
     await seedUser("u-other")
     await seedWedding({ id: "w-1", userId: "u-owner", slug: "owner-slug" })
 
-    const guard = createAuthenticatedGuard("u-other") as unknown as typeof authGuard
+    const guard = createAuthenticatedGuard(
+      "u-other",
+    ) as unknown as typeof authGuard
     const app = new Elysia().use(
-      createWeddingsRoutes({ service: createWeddingsService(testDb), guard })
+      createWeddingsRoutes({ service: createWeddingsService(testDb), guard }),
     )
 
     const res = await app.handle(
-      jsonRequest("http://localhost/admin/wedding/w-1", "PUT", { title: "Invasão" })
+      jsonRequest("http://localhost/admin/wedding/w-1", "PUT", {
+        title: "Invasão",
+      }),
     )
     expect(res.status).toBe(403)
   })
@@ -485,9 +641,13 @@ describe("routes integration", () => {
     await seedGift({ id: "g-1", weddingId: "w-1" })
 
     const guard = createAuthenticatedGuard("u-1") as unknown as typeof authGuard
-    const app = new Elysia().use(createGiftsRoutes({ service: createGiftsService(testDb), guard }))
+    const app = new Elysia().use(
+      createGiftsRoutes({ service: createGiftsService(testDb), guard }),
+    )
 
-    const giftsResponse = await app.handle(new Request("http://localhost/admin/gifts"))
+    const giftsResponse = await app.handle(
+      new Request("http://localhost/admin/gifts"),
+    )
     expect(giftsResponse.status).toBe(200)
     const giftsPayload = await giftsResponse.json()
     expect(giftsPayload).toHaveLength(1)
@@ -500,7 +660,9 @@ describe("routes integration", () => {
     await seedWedding({ id: "w-1", userId: "u-1", slug: "w-1-slug" })
 
     const guard = createAuthenticatedGuard("u-1") as unknown as typeof authGuard
-    const app = new Elysia().use(createGiftsRoutes({ service: createGiftsService(testDb), guard }))
+    const app = new Elysia().use(
+      createGiftsRoutes({ service: createGiftsService(testDb), guard }),
+    )
 
     const res = await app.handle(
       jsonRequest("http://localhost/admin/gifts", "POST", {
@@ -508,7 +670,7 @@ describe("routes integration", () => {
         price: 45000,
         paymentType: "url",
         paymentValue: "https://loja.com/fritadeira",
-      })
+      }),
     )
     expect(res.status).toBe(201)
     const body = await res.json()
@@ -520,17 +682,22 @@ describe("routes integration", () => {
     if (!integrationDbAvailable) return
 
     await seedUser("u-public")
-    await seedWedding({ id: "w-public", userId: "u-public", slug: "public-slug", published: true })
+    await seedWedding({
+      id: "w-public",
+      userId: "u-public",
+      slug: "public-slug",
+      published: true,
+    })
 
     const app = new Elysia().use(
       createPublicRoutes({
         service: createPublicService(testDb),
         guestsService: createGuestsService(testDb),
-      })
+      }),
     )
 
     const weddingResponse = await app.handle(
-      new Request("http://localhost/public/weddings/public-slug")
+      new Request("http://localhost/public/weddings/public-slug"),
     )
     expect(weddingResponse.status).toBe(200)
     const weddingBody = await weddingResponse.json()
@@ -542,7 +709,7 @@ describe("routes integration", () => {
       jsonRequest("http://localhost/public/weddings/public-slug/rsvp", "POST", {
         name: "Guest",
         rsvp: "confirmed",
-      })
+      }),
     )
 
     expect(rsvpResponse.status).toBe(201)
@@ -560,16 +727,23 @@ describe("routes integration", () => {
     if (!integrationDbAvailable) return
 
     await seedUser("u-1")
-    await seedWedding({ id: "w-1", userId: "u-1", slug: "privado", published: false })
+    await seedWedding({
+      id: "w-1",
+      userId: "u-1",
+      slug: "privado",
+      published: false,
+    })
 
     const app = new Elysia().use(
       createPublicRoutes({
         service: createPublicService(testDb),
         guestsService: createGuestsService(testDb),
-      })
+      }),
     )
 
-    const res = await app.handle(new Request("http://localhost/public/weddings/privado"))
+    const res = await app.handle(
+      new Request("http://localhost/public/weddings/privado"),
+    )
     expect(res.status).toBe(404)
   })
 
@@ -580,7 +754,9 @@ describe("routes integration", () => {
     await seedWedding({ id: "w-1", userId: "u-1", slug: "slug-1" })
 
     const guestsService = createGuestsService(testDb)
-    const createResult = await guestsService.createGuest("u-1", { name: "Maria" })
+    const createResult = await guestsService.createGuest("u-1", {
+      name: "Maria",
+    })
     const guest = "data" in createResult ? createResult.data : null
     if (!guest) throw new Error("Expected guest data")
 
@@ -588,13 +764,13 @@ describe("routes integration", () => {
       createPublicRoutes({
         service: createPublicService(testDb),
         guestsService,
-      })
+      }),
     )
 
     const res = await app.handle(
       jsonRequest(`http://localhost/public/rsvp/${guest.rsvpToken}`, "POST", {
         rsvp: "confirmed",
-      })
+      }),
     )
     expect(res.status).toBe(200)
     const body = await res.json()
@@ -608,19 +784,25 @@ describe("routes integration", () => {
     await seedWedding({ id: "w-1", userId: "u-1", slug: "slug-companions" })
 
     const guestsService = createGuestsService(testDb)
-    const createResult = await guestsService.createGuest("u-1", { name: "Maria", plusOne: 3 })
+    const createResult = await guestsService.createGuest("u-1", {
+      name: "Maria",
+      plusOne: 3,
+    })
     const guest = "data" in createResult ? createResult.data : null
     if (!guest) throw new Error("Expected guest data")
 
     const app = new Elysia().use(
-      createPublicRoutes({ service: createPublicService(testDb), guestsService })
+      createPublicRoutes({
+        service: createPublicService(testDb),
+        guestsService,
+      }),
     )
 
     const res = await app.handle(
       jsonRequest(`http://localhost/public/rsvp/${guest.rsvpToken}`, "POST", {
         rsvp: "confirmed",
         companions: 1,
-      })
+      }),
     )
     expect(res.status).toBe(200)
     const body = await res.json()
@@ -635,25 +817,36 @@ describe("routes integration", () => {
     await seedWedding({ id: "w-1", userId: "u-1", slug: "slug-over-limit" })
 
     const guestsService = createGuestsService(testDb)
-    const createResult = await guestsService.createGuest("u-1", { name: "Maria", plusOne: 2 })
+    const createResult = await guestsService.createGuest("u-1", {
+      name: "Maria",
+      plusOne: 2,
+    })
     const guest = "data" in createResult ? createResult.data : null
     if (!guest) throw new Error("Expected guest data")
 
     const app = new Elysia().use(
-      createPublicRoutes({ service: createPublicService(testDb), guestsService })
+      createPublicRoutes({
+        service: createPublicService(testDb),
+        guestsService,
+      }),
     )
 
     const res = await app.handle(
       jsonRequest(`http://localhost/public/rsvp/${guest.rsvpToken}`, "POST", {
         rsvp: "confirmed",
         companions: 3,
-      })
+      }),
     )
     expect(res.status).toBe(422)
     const body = await res.json()
-    expect(body.message).toBe("Você pode confirmar no máximo 2 acompanhante(s).")
+    expect(body.message).toBe(
+      "Você pode confirmar no máximo 2 acompanhante(s).",
+    )
 
-    const rows = await testDb.select().from(guests).where(eq(guests.id, guest.id))
+    const rows = await testDb
+      .select()
+      .from(guests)
+      .where(eq(guests.id, guest.id))
     expect(rows[0]?.rsvp).toBe("pending")
     expect(rows[0]?.confirmedCompanions).toBe(0)
   })
@@ -662,22 +855,32 @@ describe("routes integration", () => {
     if (!integrationDbAvailable) return
 
     await seedUser("u-1")
-    await seedWedding({ id: "w-1", userId: "u-1", slug: "slug-invalid-companions" })
+    await seedWedding({
+      id: "w-1",
+      userId: "u-1",
+      slug: "slug-invalid-companions",
+    })
 
     const guestsService = createGuestsService(testDb)
-    const createResult = await guestsService.createGuest("u-1", { name: "Maria", plusOne: 2 })
+    const createResult = await guestsService.createGuest("u-1", {
+      name: "Maria",
+      plusOne: 2,
+    })
     const guest = "data" in createResult ? createResult.data : null
     if (!guest) throw new Error("Expected guest data")
 
     const app = new Elysia().use(
-      createPublicRoutes({ service: createPublicService(testDb), guestsService })
+      createPublicRoutes({
+        service: createPublicService(testDb),
+        guestsService,
+      }),
     )
 
     const negative = await app.handle(
       jsonRequest(`http://localhost/public/rsvp/${guest.rsvpToken}`, "POST", {
         rsvp: "confirmed",
         companions: -1,
-      })
+      }),
     )
     expect(negative.status).toBe(422)
 
@@ -685,7 +888,7 @@ describe("routes integration", () => {
       jsonRequest(`http://localhost/public/rsvp/${guest.rsvpToken}`, "POST", {
         rsvp: "confirmed",
         companions: 1.5,
-      })
+      }),
     )
     expect(fractional.status).toBe(422)
 
@@ -693,7 +896,7 @@ describe("routes integration", () => {
       jsonRequest(`http://localhost/public/rsvp/${guest.rsvpToken}`, "POST", {
         rsvp: "confirmed",
         companions: "two",
-      })
+      }),
     )
     expect(notNumeric.status).toBe(422)
   })
@@ -705,25 +908,31 @@ describe("routes integration", () => {
     await seedWedding({ id: "w-1", userId: "u-1", slug: "slug-decline" })
 
     const guestsService = createGuestsService(testDb)
-    const createResult = await guestsService.createGuest("u-1", { name: "Maria", plusOne: 2 })
+    const createResult = await guestsService.createGuest("u-1", {
+      name: "Maria",
+      plusOne: 2,
+    })
     const guest = "data" in createResult ? createResult.data : null
     if (!guest) throw new Error("Expected guest data")
 
     const app = new Elysia().use(
-      createPublicRoutes({ service: createPublicService(testDb), guestsService })
+      createPublicRoutes({
+        service: createPublicService(testDb),
+        guestsService,
+      }),
     )
 
     await app.handle(
       jsonRequest(`http://localhost/public/rsvp/${guest.rsvpToken}`, "POST", {
         rsvp: "confirmed",
         companions: 2,
-      })
+      }),
     )
 
     const declineRes = await app.handle(
       jsonRequest(`http://localhost/public/rsvp/${guest.rsvpToken}`, "POST", {
         rsvp: "declined",
-      })
+      }),
     )
     expect(declineRes.status).toBe(200)
     const body = await declineRes.json()
@@ -738,13 +947,18 @@ describe("routes integration", () => {
     await seedWedding({ id: "w-1", userId: "u-1", slug: "slug-admin-reset" })
 
     const guestsService = createGuestsService(testDb)
-    const createResult = await guestsService.createGuest("u-1", { name: "Maria", plusOne: 2 })
+    const createResult = await guestsService.createGuest("u-1", {
+      name: "Maria",
+      plusOne: 2,
+    })
     const guest = "data" in createResult ? createResult.data : null
     if (!guest) throw new Error("Expected guest data")
 
     await guestsService.confirmRsvpByToken(guest.rsvpToken!, "confirmed", 2)
 
-    const updateResult = await guestsService.updateGuest("u-1", guest.id, { rsvp: "pending" })
+    const updateResult = await guestsService.updateGuest("u-1", guest.id, {
+      rsvp: "pending",
+    })
     const updated = "data" in updateResult ? updateResult.data : null
     expect(updated?.rsvp).toBe("pending")
     expect(updated?.confirmedCompanions).toBe(0)
@@ -757,7 +971,12 @@ describe("guest messages integration", () => {
 
     await seedUser("u-1")
     await seedWedding({ id: "w-1", userId: "u-1", slug: "slug-1" })
-    await seedGift({ id: "g-1", weddingId: "w-1", active: false, lockedAt: now })
+    await seedGift({
+      id: "g-1",
+      weddingId: "w-1",
+      active: false,
+      lockedAt: now,
+    })
     await seedGiftPayment({
       id: "p-1",
       giftId: "g-1",
@@ -767,11 +986,13 @@ describe("guest messages integration", () => {
 
     const guard = createAuthenticatedGuard("u-1") as unknown as typeof authGuard
     const app = new Elysia().use(
-      createPaymentsRoutes({ service: createPaymentsService(testDb), guard })
+      createPaymentsRoutes({ service: createPaymentsService(testDb), guard }),
     )
 
     const res = await app.handle(
-      new Request("http://localhost/admin/payments/p-1/confirm", { method: "PUT" })
+      new Request("http://localhost/admin/payments/p-1/confirm", {
+        method: "PUT",
+      }),
     )
     expect(res.status).toBe(200)
     const body = await res.json()
@@ -793,16 +1014,23 @@ describe("guest messages integration", () => {
 
     await seedUser("u-1")
     await seedWedding({ id: "w-1", userId: "u-1", slug: "slug-1" })
-    await seedGift({ id: "g-1", weddingId: "w-1", active: false, lockedAt: now })
+    await seedGift({
+      id: "g-1",
+      weddingId: "w-1",
+      active: false,
+      lockedAt: now,
+    })
     await seedGiftPayment({ id: "p-1", giftId: "g-1", weddingId: "w-1" })
 
     const guard = createAuthenticatedGuard("u-1") as unknown as typeof authGuard
     const app = new Elysia().use(
-      createPaymentsRoutes({ service: createPaymentsService(testDb), guard })
+      createPaymentsRoutes({ service: createPaymentsService(testDb), guard }),
     )
 
     const res = await app.handle(
-      new Request("http://localhost/admin/payments/p-1/confirm", { method: "PUT" })
+      new Request("http://localhost/admin/payments/p-1/confirm", {
+        method: "PUT",
+      }),
     )
     expect(res.status).toBe(200)
     const body = await res.json()
@@ -822,7 +1050,12 @@ describe("guest messages integration", () => {
     await seedUser("u-other")
     await seedWedding({ id: "w-1", userId: "u-owner", slug: "owner-slug" })
     await seedGift({ id: "g-1", weddingId: "w-1" })
-    await seedGiftPayment({ id: "p-1", giftId: "g-1", weddingId: "w-1", status: "approved" })
+    await seedGiftPayment({
+      id: "p-1",
+      giftId: "g-1",
+      weddingId: "w-1",
+      status: "approved",
+    })
     await seedGuestMessage({ id: "m-1", weddingId: "w-1", paymentId: "p-1" })
 
     const service = createMessagesService(testDb)
@@ -835,10 +1068,25 @@ describe("guest messages integration", () => {
     if (!integrationDbAvailable) return
 
     await seedUser("u-1")
-    await seedWedding({ id: "w-1", userId: "u-1", slug: "public-slug", published: true })
+    await seedWedding({
+      id: "w-1",
+      userId: "u-1",
+      slug: "public-slug",
+      published: true,
+    })
     await seedGift({ id: "g-1", weddingId: "w-1" })
-    await seedGiftPayment({ id: "p-1", giftId: "g-1", weddingId: "w-1", status: "approved" })
-    await seedGiftPayment({ id: "p-2", giftId: "g-1", weddingId: "w-1", status: "approved" })
+    await seedGiftPayment({
+      id: "p-1",
+      giftId: "g-1",
+      weddingId: "w-1",
+      status: "approved",
+    })
+    await seedGiftPayment({
+      id: "p-2",
+      giftId: "g-1",
+      weddingId: "w-1",
+      status: "approved",
+    })
     await seedGuestMessage({
       id: "m-1",
       weddingId: "w-1",
@@ -860,11 +1108,11 @@ describe("guest messages integration", () => {
       createPublicRoutes({
         service: createPublicService(testDb),
         guestsService: createGuestsService(testDb),
-      })
+      }),
     )
 
     const res = await app.handle(
-      new Request("http://localhost/public/weddings/public-slug/messages")
+      new Request("http://localhost/public/weddings/public-slug/messages"),
     )
     expect(res.status).toBe(200)
     const messages = await res.json()

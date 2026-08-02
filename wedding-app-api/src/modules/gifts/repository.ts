@@ -20,6 +20,21 @@ export function createGiftsRepository(database: Database) {
       return rows[0]?.value ?? null
     },
 
+    async renumber(weddingId: string) {
+      const ordered = await database
+        .select({ id: gifts.id })
+        .from(gifts)
+        .where(eq(gifts.weddingId, weddingId))
+        .orderBy(asc(gifts.sortOrder), asc(gifts.id))
+
+      for (let i = 0; i < ordered.length; i++) {
+        await database
+          .update(gifts)
+          .set({ sortOrder: (i + 1) * 1000, updatedAt: new Date() })
+          .where(eq(gifts.id, ordered[i]!.id))
+      }
+    },
+
     async findById(id: string) {
       const rows = await database
         .select()
@@ -55,7 +70,7 @@ export function createGiftsRepository(database: Database) {
         isActive: boolean
         lockedAt: Date | null
         sortOrder: number
-      }>
+      }>,
     ) {
       const rows = await database
         .update(gifts)
@@ -100,8 +115,8 @@ export function createGiftsRepository(database: Database) {
           and(
             eq(gifts.isActive, false),
             isNotNull(gifts.lockedAt),
-            lt(gifts.lockedAt, cutoff)
-          )
+            lt(gifts.lockedAt, cutoff),
+          ),
         )
     },
   }

@@ -56,7 +56,9 @@ export const deleteGift = command(v.string(), async (id) => apiDelete(`/admin/gi
 export const reorderGift = command(
 	v.object({
 		id: v.string(),
-		direction: v.picklist(['up', 'down'])
+		beforeId: v.optional(v.string()),
+		afterId: v.optional(v.string())
 	}),
-	async ({ id, direction }) => apiPost<Gift[]>(`/admin/gifts/${id}/reorder`, { direction })
+	async ({ id, beforeId, afterId }) =>
+		apiPost<Gift[]>(`/admin/gifts/${id}/reorder`, { beforeId, afterId })
 );

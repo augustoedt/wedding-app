@@ -42,7 +42,7 @@ export function createGiftsService(database: Database) {
         imageUrl?: string | null
         paymentType?: string | null
         paymentValue?: string | null
-      }
+      },
     ) {
       const wedding = await getWeddingForUser(userId)
       if (!wedding) return { error: "no_wedding" as const }
@@ -50,25 +50,56 @@ export function createGiftsService(database: Database) {
       const maxSortOrder = await repo.findMaxSortOrder(wedding.id)
       const sortOrder = (maxSortOrder ?? 0) + 1000
 
-      return { data: await repo.create({ ...data, weddingId: wedding.id, sortOrder }) }
+      return {
+        data: await repo.create({ ...data, weddingId: wedding.id, sortOrder }),
+      }
     },
 
-    async reorderGift(userId: string, giftId: string, direction: "up" | "down") {
+    async reorderGift(
+      userId: string,
+      giftId: string,
+      target: { beforeId?: string; afterId?: string },
+    ) {
       const gift = await repo.findById(giftId)
       if (!gift) return { error: "not_found" as const }
 
       const wedding = await weddingsRepo.findById(gift.weddingId)
-      if (!wedding || wedding.userId !== userId) return { error: "forbidden" as const }
+      if (!wedding || wedding.userId !== userId)
+        return { error: "forbidden" as const }
 
-      const ordered = await repo.findByWeddingId(wedding.id)
-      const index = ordered.findIndex((g) => g.id === giftId)
-      const neighborIndex = direction === "up" ? index - 1 : index + 1
-      const neighbor = ordered[neighborIndex]
+      const before = target.beforeId
+        ? await repo.findById(target.beforeId)
+        : null
+      const after = target.afterId ? await repo.findById(target.afterId) : null
 
-      if (!neighbor) return { data: ordered }
+      if (target.beforeId && (!before || before.weddingId !== wedding.id))
+        return { error: "forbidden" as const }
+      if (target.afterId && (!after || after.weddingId !== wedding.id))
+        return { error: "forbidden" as const }
+      if (!before && !after) return { error: "invalid_target" as const }
 
-      await repo.update(gift.id, { sortOrder: neighbor.sortOrder })
-      await repo.update(neighbor.id, { sortOrder: gift.sortOrder })
+      let sortOrder: number
+      if (before && after) {
+        sortOrder = Math.floor((before.sortOrder + after.sortOrder) / 2)
+        const noRoomLeft =
+          sortOrder <= before.sortOrder || sortOrder >= after.sortOrder
+        if (noRoomLeft) {
+          await repo.renumber(wedding.id)
+          const refreshedBefore = await repo.findById(before.id)
+          const refreshedAfter = await repo.findById(after.id)
+          sortOrder = Math.floor(
+            ((refreshedBefore?.sortOrder ?? 0) +
+              (refreshedAfter?.sortOrder ?? 0)) /
+              2,
+          )
+        }
+      } else if (before) {
+        sortOrder = before.sortOrder + 1000
+      } else {
+        sortOrder = after!.sortOrder - 1000
+      }
+
+      await repo.update(gift.id, { sortOrder })
 
       return { data: await repo.findByWeddingId(wedding.id) }
     },
@@ -85,13 +116,14 @@ export function createGiftsService(database: Database) {
         paymentValue: string | null
         isActive: boolean
         status: GiftStatus
-      }>
+      }>,
     ) {
       const gift = await repo.findById(giftId)
       if (!gift) return { error: "not_found" as const }
 
       const wedding = await weddingsRepo.findById(gift.weddingId)
-      if (!wedding || wedding.userId !== userId) return { error: "forbidden" as const }
+      if (!wedding || wedding.userId !== userId)
+        return { error: "forbidden" as const }
 
       const { status, ...rest } = data
       const statusFields = status ? statusToFields(status) : {}
@@ -110,7 +142,8 @@ export function createGiftsService(database: Database) {
       if (!gift) return { error: "not_found" as const }
 
       const wedding = await weddingsRepo.findById(gift.weddingId)
-      if (!wedding || wedding.userId !== userId) return { error: "forbidden" as const }
+      if (!wedding || wedding.userId !== userId)
+        return { error: "forbidden" as const }
 
       await repo.delete(giftId)
       return { data: null }

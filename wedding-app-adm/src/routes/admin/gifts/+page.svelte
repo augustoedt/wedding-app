@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { flip } from 'svelte/animate';
+	import { DotsSixVertical } from 'phosphor-svelte';
 	import {
 		getGifts,
 		addGift,
@@ -10,6 +12,11 @@
 	} from '$lib/api/gifts.remote';
 
 	const gifts = getGifts();
+
+	let items = $state<Gift[]>([]);
+	$effect(() => {
+		if (gifts.current) items = [...gifts.current];
+	});
 
 	let showForm = $state(false);
 	let editingGift = $state<Gift | null>(null);
@@ -105,16 +112,29 @@
 		gifts.refresh();
 	}
 
-	let reordering = $state<string | null>(null);
+	let dragIndex = $state<number | null>(null);
 
-	async function move(g: Gift, direction: 'up' | 'down') {
-		reordering = g.id;
-		try {
-			await reorderGift({ id: g.id, direction });
-			gifts.refresh();
-		} finally {
-			reordering = null;
-		}
+	function handleDragStart(i: number) {
+		dragIndex = i;
+	}
+
+	function handleDragEnter(i: number) {
+		if (dragIndex === null || dragIndex === i) return;
+		const moved = items[dragIndex];
+		if (!moved) return;
+		items.splice(dragIndex, 1);
+		items.splice(i, 0, moved);
+		dragIndex = i;
+	}
+
+	async function handleDragEnd() {
+		if (dragIndex === null) return;
+		const i = dragIndex;
+		dragIndex = null;
+		const target = items[i];
+		if (!target) return;
+		await reorderGift({ id: target.id, beforeId: items[i - 1]?.id, afterId: items[i + 1]?.id });
+		gifts.refresh();
 	}
 
 	function formatPrice(cents: number) {
@@ -206,7 +226,7 @@
 		<div class="h-40 animate-pulse rounded-xl bg-slate-200"></div>
 	{:else if gifts.error}
 		<div class="rounded-xl bg-red-50 p-4 text-red-600">Erro ao carregar presentes.</div>
-	{:else if !gifts.current?.length}
+	{:else if !items.length}
 		<div
 			class="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 py-16 text-center"
 		>
@@ -219,6 +239,7 @@
 					<tr
 						class="border-b border-slate-100 bg-slate-50 text-left text-xs font-medium tracking-wide text-slate-500 uppercase"
 					>
+						<th class="w-10 px-4 py-3">#</th>
 						<th class="px-4 py-3">Presente</th>
 						<th class="px-4 py-3">Preço</th>
 						<th class="px-4 py-3">Pagamento</th>
@@ -227,46 +248,29 @@
 					</tr>
 				</thead>
 				<tbody class="divide-y divide-slate-100">
-					{#each gifts.current as g, i (g.id)}
-						<tr class="hover:bg-slate-50">
+					{#each items as g, i (g.id)}
+						<tr
+							class="hover:bg-slate-50"
+							animate:flip={{ duration: 200 }}
+							ondragover={(e) => e.preventDefault()}
+							ondragenter={() => handleDragEnter(i)}
+						>
+							<td class="px-4 py-3 text-sm text-slate-400 select-none">
+								<span
+									role="button"
+									tabindex="0"
+									aria-label="Arraste para reordenar"
+									draggable="true"
+									ondragstart={() => handleDragStart(i)}
+									ondragend={handleDragEnd}
+									class="inline-flex cursor-grab items-center gap-1.5 active:cursor-grabbing"
+								>
+									<DotsSixVertical size={16} class="text-slate-300" />
+									{i + 1}
+								</span>
+							</td>
 							<td class="px-4 py-3">
 								<div class="flex items-center gap-3">
-									<div class="flex flex-col">
-										<button
-											onclick={() => move(g, 'up')}
-											disabled={i === 0 || reordering !== null}
-											aria-label="Mover para cima"
-											class="text-slate-300 hover:text-slate-600 disabled:opacity-30 disabled:hover:text-slate-300"
-										>
-											<svg
-												xmlns="http://www.w3.org/2000/svg"
-												class="h-3.5 w-3.5"
-												viewBox="0 0 24 24"
-												fill="none"
-												stroke="currentColor"
-												stroke-width="2.5"
-												stroke-linecap="round"
-												stroke-linejoin="round"><polyline points="18 15 12 9 6 15" /></svg
-											>
-										</button>
-										<button
-											onclick={() => move(g, 'down')}
-											disabled={i === gifts.current.length - 1 || reordering !== null}
-											aria-label="Mover para baixo"
-											class="text-slate-300 hover:text-slate-600 disabled:opacity-30 disabled:hover:text-slate-300"
-										>
-											<svg
-												xmlns="http://www.w3.org/2000/svg"
-												class="h-3.5 w-3.5"
-												viewBox="0 0 24 24"
-												fill="none"
-												stroke="currentColor"
-												stroke-width="2.5"
-												stroke-linecap="round"
-												stroke-linejoin="round"><polyline points="6 9 12 15 18 9" /></svg
-											>
-										</button>
-									</div>
 									{#if g.imageUrl}
 										<img src={g.imageUrl} alt={g.name} class="h-10 w-10 rounded-lg object-cover" />
 									{:else}

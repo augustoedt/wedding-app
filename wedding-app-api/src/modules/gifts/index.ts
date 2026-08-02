@@ -1,7 +1,12 @@
 import { Elysia } from "elysia"
 import type { authGuard } from "../../lib/auth-guard"
 import type { createGiftsService } from "./service"
-import { createGiftBody, giftIdParams, reorderGiftBody, updateGiftBody } from "./model"
+import {
+  createGiftBody,
+  giftIdParams,
+  reorderGiftBody,
+  updateGiftBody,
+} from "./model"
 
 export function createGiftsRoutes({
   service,
@@ -24,47 +29,66 @@ export function createGiftsRoutes({
         const result = await service.createGift(session!.user.id, body)
         if ("error" in result && result.error === "no_wedding")
           return status(404, { message: "No wedding found" })
-        return new Response(JSON.stringify((result as { data: unknown }).data), {
-          status: 201,
-          headers: { "content-type": "application/json" },
-        })
+        return new Response(
+          JSON.stringify((result as { data: unknown }).data),
+          {
+            status: 201,
+            headers: { "content-type": "application/json" },
+          },
+        )
       },
-      { body: createGiftBody }
+      { body: createGiftBody },
     )
     .put(
       "/gifts/:id",
       async ({ session, params, body, status }) => {
-        const result = await service.updateGift(session!.user.id, params.id, body)
+        const result = await service.updateGift(
+          session!.user.id,
+          params.id,
+          body,
+        )
         if ("error" in result) {
-          if (result.error === "not_found") return status(404, { message: "Gift not found" })
-          if (result.error === "forbidden") return status(403, { message: "Forbidden" })
+          if (result.error === "not_found")
+            return status(404, { message: "Gift not found" })
+          if (result.error === "forbidden")
+            return status(403, { message: "Forbidden" })
         }
         return (result as { data: unknown }).data
       },
-      { params: giftIdParams, body: updateGiftBody }
+      { params: giftIdParams, body: updateGiftBody },
     )
     .delete(
       "/gifts/:id",
       async ({ session, params, status }) => {
         const result = await service.deleteGift(session!.user.id, params.id)
         if ("error" in result) {
-          if (result.error === "not_found") return status(404, { message: "Gift not found" })
-          if (result.error === "forbidden") return status(403, { message: "Forbidden" })
+          if (result.error === "not_found")
+            return status(404, { message: "Gift not found" })
+          if (result.error === "forbidden")
+            return status(403, { message: "Forbidden" })
         }
         return new Response(null, { status: 204 })
       },
-      { params: giftIdParams }
+      { params: giftIdParams },
     )
     .post(
       "/gifts/:id/reorder",
       async ({ session, params, body, status }) => {
-        const result = await service.reorderGift(session!.user.id, params.id, body.direction)
+        const result = await service.reorderGift(
+          session!.user.id,
+          params.id,
+          body,
+        )
         if ("error" in result) {
-          if (result.error === "not_found") return status(404, { message: "Gift not found" })
-          if (result.error === "forbidden") return status(403, { message: "Forbidden" })
+          if (result.error === "not_found")
+            return status(404, { message: "Gift not found" })
+          if (result.error === "forbidden")
+            return status(403, { message: "Forbidden" })
+          if (result.error === "invalid_target")
+            return status(422, { message: "Provide beforeId and/or afterId" })
         }
         return (result as { data: unknown }).data
       },
-      { params: giftIdParams, body: reorderGiftBody }
+      { params: giftIdParams, body: reorderGiftBody },
     )
 }
