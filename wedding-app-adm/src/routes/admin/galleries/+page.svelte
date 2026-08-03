@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { flip } from 'svelte/animate';
-	import { DotsSixVertical, Trash, X } from 'phosphor-svelte';
+	import { DotsSixVertical, Trash, X, Check, Images } from 'phosphor-svelte';
 	import {
 		getGalleries,
 		addGallery,
@@ -32,8 +32,6 @@
 		}
 		imagesByGallery = grouped;
 	});
-
-	const unassignedImages = $derived((imagesQuery.current ?? []).filter((i) => !i.galleryId));
 
 	let newTitle = $state('');
 	let creating = $state(false);
@@ -137,9 +135,47 @@
 		imagesQuery.refresh();
 	}
 
-	async function assignToGallery(imageId: string, galleryId: string) {
-		await updateImage({ id: imageId, galleryId });
-		imagesQuery.refresh();
+	let pickerGalleryId = $state<string | null>(null);
+	let selectedImageIds = $state<Set<string>>(new Set());
+	let addingSelected = $state(false);
+
+	const pickerImages = $derived(
+		pickerGalleryId
+			? (imagesQuery.current ?? []).filter((i) => i.galleryId !== pickerGalleryId)
+			: []
+	);
+
+	function openPicker(galleryId: string) {
+		pickerGalleryId = galleryId;
+		selectedImageIds = new Set();
+	}
+
+	function closePicker() {
+		pickerGalleryId = null;
+	}
+
+	function toggleSelect(imageId: string) {
+		const next = new Set(selectedImageIds);
+		if (next.has(imageId)) {
+			next.delete(imageId);
+		} else {
+			next.add(imageId);
+		}
+		selectedImageIds = next;
+	}
+
+	async function confirmAddSelected() {
+		if (!pickerGalleryId || !selectedImageIds.size) return;
+		addingSelected = true;
+		try {
+			await Promise.all(
+				[...selectedImageIds].map((id) => updateImage({ id, galleryId: pickerGalleryId }))
+			);
+			imagesQuery.refresh();
+			closePicker();
+		} finally {
+			addingSelected = false;
+		}
 	}
 
 	let uploadingGalleryId = $state<string | null>(null);
@@ -256,6 +292,13 @@
 						{/if}
 
 						<div class="ml-auto flex items-center gap-3">
+							<button
+								onclick={() => openPicker(gallery.id)}
+								class="btn-ghost inline-flex items-center gap-1.5 text-sm"
+							>
+								<Images size={16} />
+								Adicionar da Mídia
+							</button>
 							<label class="btn-ghost cursor-pointer text-sm">
 								{uploadingGalleryId === gallery.id ? 'Enviando...' : '+ Adicionar fotos'}
 								<input
@@ -315,31 +358,96 @@
 					{:else}
 						<p class="text-sm text-slate-400">Nenhuma foto nessa galeria ainda.</p>
 					{/if}
-
-					{#if unassignedImages.length}
-						<div class="mt-4 border-t border-slate-100 pt-4">
-							<p class="mb-2 text-xs font-medium tracking-wide text-slate-400 uppercase">
-								Adicionar da Mídia
-							</p>
-							<div class="flex flex-wrap gap-2">
-								{#each unassignedImages as image (image.id)}
-									<button
-										onclick={() => assignToGallery(image.id, gallery.id)}
-										class="h-14 w-14 overflow-hidden rounded-lg border border-slate-200 hover:border-rose-400"
-										title="Adicionar a esta galeria"
-									>
-										<img
-											src={image.url}
-											alt={image.description ?? ''}
-											class="h-full w-full object-cover"
-										/>
-									</button>
-								{/each}
-							</div>
-						</div>
-					{/if}
 				</div>
 			{/each}
 		</div>
 	{/if}
 </div>
+
+{#if pickerGalleryId}
+	{@const targetGallery = galleryItems.find((g) => g.id === pickerGalleryId)}
+	<div
+		role="dialog"
+		aria-modal="true"
+		aria-label="Adicionar fotos da Mídia"
+		tabindex="-1"
+		class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-6"
+		onclick={closePicker}
+		onkeydown={(e) => e.key === 'Escape' && closePicker()}
+	>
+		<div
+			role="presentation"
+			class="flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+			onclick={(e) => e.stopPropagation()}
+		>
+			<div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+				<h3 class="text-base font-semibold text-slate-800">
+					Adicionar fotos à galeria "{targetGallery?.title}"
+				</h3>
+				<button
+					onclick={closePicker}
+					aria-label="Fechar"
+					class="text-slate-400 hover:text-slate-700"
+				>
+					<X size={20} />
+				</button>
+			</div>
+
+			<div class="flex-1 overflow-y-auto px-6 py-4">
+				{#if !pickerImages.length}
+					<p class="py-10 text-center text-sm text-slate-400">
+						Nenhuma outra foto disponível na Mídia.
+					</p>
+				{:else}
+					<div class="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
+						{#each pickerImages as image (image.id)}
+							{@const otherGallery = image.galleryId
+								? galleryItems.find((g) => g.id === image.galleryId)
+								: null}
+							<button
+								onclick={() => toggleSelect(image.id)}
+								class="group relative overflow-hidden rounded-lg border-2 transition {selectedImageIds.has(
+									image.id
+								)
+									? 'border-rose-400'
+									: 'border-transparent'}"
+							>
+								<img
+									src={image.url}
+									alt={image.description ?? ''}
+									class="h-24 w-full object-cover"
+								/>
+								{#if selectedImageIds.has(image.id)}
+									<div class="absolute inset-0 flex items-center justify-center bg-rose-500/40">
+										<Check size={24} weight="bold" class="text-white" />
+									</div>
+								{/if}
+								{#if otherGallery}
+									<span
+										class="absolute right-0 bottom-0 left-0 truncate bg-black/60 px-1.5 py-0.5 text-[10px] text-white"
+									>
+										Em: {otherGallery.title}
+									</span>
+								{/if}
+							</button>
+						{/each}
+					</div>
+				{/if}
+			</div>
+
+			<div class="flex items-center justify-between border-t border-slate-100 px-6 py-4">
+				<span class="text-sm text-slate-500">{selectedImageIds.size} selecionada(s)</span>
+				<div class="flex gap-3">
+					<button onclick={closePicker} class="btn-ghost">Cancelar</button>
+					<button
+						onclick={confirmAddSelected}
+						disabled={!selectedImageIds.size || addingSelected}
+						class="btn-primary"
+					>
+						{addingSelected ? 'Adicionando...' : `Adicionar (${selectedImageIds.size})`}
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+{/if}
