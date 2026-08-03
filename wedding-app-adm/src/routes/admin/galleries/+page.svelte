@@ -135,23 +135,36 @@
 		imagesQuery.refresh();
 	}
 
+	const PICKER_LIMIT = 12;
+
 	let pickerGalleryId = $state<string | null>(null);
 	let selectedImageIds = $state<Set<string>>(new Set());
 	let addingSelected = $state(false);
+	let pickerPage = $state(1);
 
 	const pickerImages = $derived(
 		pickerGalleryId
 			? (imagesQuery.current ?? []).filter((i) => i.galleryId !== pickerGalleryId)
 			: []
 	);
+	const pickerTotalPages = $derived(Math.max(1, Math.ceil(pickerImages.length / PICKER_LIMIT)));
+	const pagedPickerImages = $derived(
+		pickerImages.slice((pickerPage - 1) * PICKER_LIMIT, pickerPage * PICKER_LIMIT)
+	);
 
 	function openPicker(galleryId: string) {
 		pickerGalleryId = galleryId;
 		selectedImageIds = new Set();
+		pickerPage = 1;
 	}
 
 	function closePicker() {
 		pickerGalleryId = null;
+	}
+
+	function pickerGoToPage(p: number) {
+		if (p < 1 || p > pickerTotalPages) return;
+		pickerPage = p;
 	}
 
 	function toggleSelect(imageId: string) {
@@ -400,7 +413,7 @@
 					</p>
 				{:else}
 					<div class="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
-						{#each pickerImages as image (image.id)}
+						{#each pagedPickerImages as image (image.id)}
 							{@const otherGallery = image.galleryId
 								? galleryItems.find((g) => g.id === image.galleryId)
 								: null}
@@ -432,6 +445,28 @@
 							</button>
 						{/each}
 					</div>
+
+					{#if pickerTotalPages > 1}
+						<div class="mt-4 flex items-center justify-center gap-4">
+							<button
+								onclick={() => pickerGoToPage(pickerPage - 1)}
+								disabled={pickerPage <= 1}
+								class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-40"
+							>
+								Anterior
+							</button>
+							<span class="text-sm text-slate-500">
+								Página {pickerPage} de {pickerTotalPages}
+							</span>
+							<button
+								onclick={() => pickerGoToPage(pickerPage + 1)}
+								disabled={pickerPage >= pickerTotalPages}
+								class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-40"
+							>
+								Próxima
+							</button>
+						</div>
+					{/if}
 				{/if}
 			</div>
 
