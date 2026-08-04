@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import WeddingLayout from '$lib/components/WeddingLayout.svelte';
+	import { reveal } from '$lib/actions/reveal';
 	import type { Wedding } from '$lib/api';
 
 	let { data } = $props();
@@ -55,7 +56,7 @@
 				<h1 class="font-serif text-4xl font-light text-stone-800">Cerimônia & Festa</h1>
 				<div class="mt-4 flex items-center justify-center gap-3">
 					<div class="h-px w-16 bg-stone-200"></div>
-					<svg class="h-4 w-4 text-stone-400" viewBox="0 0 24 24" fill="currentColor">
+					<svg class="h-4 w-4 text-rose-300" viewBox="0 0 24 24" fill="currentColor">
 						<path
 							d="M12 2C9.38 2 7.25 4.13 7.25 6.75c0 2.57 2 4.66 4.56 4.73C11.87 11.48 12 11.5 12 11.5s.13-.02.19-.02c2.56-.07 4.56-2.16 4.56-4.73C16.75 4.13 14.62 2 12 2zm0 7.5c-1.52 0-2.75-1.23-2.75-2.75S10.48 4 12 4s2.75 1.23 2.75 2.75S13.52 9.5 12 9.5z"
 						/>
@@ -65,7 +66,7 @@
 			</div>
 
 			<!-- Local -->
-			<section class="mb-16">
+			<section class="mb-16" use:reveal data-reveal>
 				<h2 class="mb-6 text-center text-sm font-medium tracking-[0.3em] text-stone-500 uppercase">
 					Local
 				</h2>
@@ -116,7 +117,7 @@
 								href={mapsUrl}
 								target="_blank"
 								rel="noopener noreferrer"
-								class="inline-flex items-center gap-2 rounded-full border border-stone-200 px-6 py-2.5 text-sm font-medium text-stone-600 transition hover:border-stone-400 hover:text-stone-800"
+								class="inline-flex items-center gap-2 rounded-full border border-stone-200 px-6 py-2.5 text-sm font-medium text-stone-600 transition duration-200 hover:border-stone-400 hover:text-stone-800 active:scale-[0.97]"
 							>
 								<svg
 									class="h-4 w-4"
@@ -153,7 +154,7 @@
 			</div>
 
 			<!-- Dress code -->
-			<section>
+			<section use:reveal data-reveal>
 				<h2 class="mb-6 text-center text-sm font-medium tracking-[0.3em] text-stone-500 uppercase">
 					Dress Code
 				</h2>
@@ -161,7 +162,7 @@
 				{#if hasDressCode}
 					<div class="space-y-8">
 						{#if wedding.dressCodeGuests}
-							<div class="space-y-3 text-center font-mono text-sm leading-relaxed text-stone-600">
+							<div class="space-y-3 text-center text-[15px] leading-loose font-light text-stone-600">
 								{#each wedding.dressCodeGuests.split('\n\n') as paragraph (paragraph)}
 									<p>{paragraph}</p>
 								{/each}
@@ -175,7 +176,7 @@
 								>
 									Padrinhos e madrinhas
 								</p>
-								<div class="space-y-3 text-center font-mono text-sm leading-relaxed text-stone-600">
+								<div class="space-y-3 text-center text-[15px] leading-loose font-light text-stone-600">
 									{#each wedding.dressCodeGroomsmen.split('\n\n') as paragraph (paragraph)}
 										<p>{paragraph}</p>
 									{/each}

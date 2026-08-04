@@ -1,5 +1,6 @@
 <script lang="ts">
 	import FlipCard from './FlipCard.svelte';
+	import { reveal } from '$lib/actions/reveal';
 	import { parseDateOnly } from '$lib/utils/date';
 
 	let { date }: { date: string } = $props();
@@ -30,9 +31,9 @@
 	});
 </script>
 
-<section class="bg-white py-14">
-	<div class="mx-auto max-w-2xl px-6 text-center">
-		<h2 class="mb-8 text-sm font-medium tracking-[0.3em] uppercase text-stone-500">
+<section class="bg-white py-16">
+	<div class="mx-auto max-w-2xl px-6 text-center" use:reveal data-reveal>
+		<h2 class="mb-8 text-sm font-medium tracking-[0.3em] text-stone-500 uppercase">
 			{isPast ? 'Já se passaram' : 'Faltam'}
 		</h2>
 

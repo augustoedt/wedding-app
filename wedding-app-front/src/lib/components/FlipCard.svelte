@@ -27,8 +27,8 @@
 		background: #1c1c1c;
 		border-radius: 8px;
 		box-shadow:
-			0 4px 16px rgba(0, 0, 0, 0.2),
-			0 1px 4px rgba(0, 0, 0, 0.15);
+			0 8px 20px rgba(28, 20, 20, 0.28),
+			0 1px 4px rgba(28, 20, 20, 0.2);
 		display: flex;
 		flex-direction: column;
 		align-items: center;

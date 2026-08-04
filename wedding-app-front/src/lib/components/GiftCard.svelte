@@ -28,7 +28,7 @@
 </script>
 
 <div
-	class="mx-auto flex max-h-80 w-full max-w-[20rem] flex-col overflow-hidden rounded-xl border border-stone-100 bg-white shadow-sm transition"
+	class="mx-auto flex max-h-80 w-full max-w-[20rem] flex-col overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-stone-900/5 transition duration-300 hover:-translate-y-1 hover:shadow-lg"
 	class:grayscale={isBought}
 	class:opacity-60={isBought}
 	class:opacity-75={isLocked}
@@ -98,7 +98,7 @@
 		{:else}
 			<button
 				onclick={() => onBuy(gift)}
-				class="rounded-lg bg-stone-800 py-2.5 text-sm font-medium text-white transition hover:bg-stone-700"
+				class="rounded-lg bg-stone-800 py-2.5 text-sm font-medium text-white transition duration-200 hover:bg-stone-700 active:scale-[0.98]"
 			>
 				Comprar
 			</button>

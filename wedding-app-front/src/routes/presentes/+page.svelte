@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { reveal } from '$lib/actions/reveal';
 	import { PUBLIC_WEDDING_SLUG } from '$env/static/public';
 	import type { Gift } from '$lib/server/api';
 	import WeddingLayout from '$lib/components/WeddingLayout.svelte';
@@ -57,7 +58,7 @@
 				<h1 class="font-serif text-4xl font-light text-stone-800">Lista de Presentes</h1>
 				<div class="mt-4 flex items-center justify-center gap-3">
 					<div class="h-px w-16 bg-stone-200"></div>
-					<svg class="h-4 w-4 text-stone-400" viewBox="0 0 24 24" fill="currentColor">
+					<svg class="h-4 w-4 text-rose-300" viewBox="0 0 24 24" fill="currentColor">
 						<path
 							d="M20 7h-1.26A4 4 0 0 0 15 4a4 4 0 0 0-3 1.35A4 4 0 0 0 9 4a4 4 0 0 0-3.74 3H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"
 						/>
@@ -80,6 +81,8 @@
 				</div>
 			{:else}
 				<div
+					use:reveal
+					data-reveal
 					class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:gap-6 lg:grid-cols-4"
 					class:opacity-50={navigating}
 				>
@@ -93,7 +96,7 @@
 						<button
 							onclick={() => goToPage(currentPage - 1)}
 							disabled={navigating || currentPage <= 1}
-							class="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-50 disabled:opacity-40"
+							class="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 transition duration-200 hover:bg-stone-50 active:scale-[0.97] disabled:opacity-40"
 						>
 							Anterior
 						</button>
@@ -103,7 +106,7 @@
 						<button
 							onclick={() => goToPage(currentPage + 1)}
 							disabled={navigating || currentPage >= totalPages}
-							class="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-50 disabled:opacity-40"
+							class="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 transition duration-200 hover:bg-stone-50 active:scale-[0.97] disabled:opacity-40"
 						>
 							Próxima
 						</button>

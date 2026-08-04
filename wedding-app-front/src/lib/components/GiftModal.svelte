@@ -76,7 +76,7 @@
 	onclick={handleBackdrop}
 	onkeydown={(e) => e.key === 'Escape' && onClose()}
 >
-	<div class="w-full max-w-md rounded-2xl bg-white shadow-xl">
+	<div class="w-full max-w-md rounded-2xl bg-white shadow-xl ring-1 ring-stone-900/5">
 		<!-- Header -->
 		<div class="flex items-start justify-between border-b border-stone-100 px-6 py-4">
 			<div>
@@ -151,14 +151,14 @@
 						<button
 							type="button"
 							onclick={onClose}
-							class="flex-1 rounded-lg border border-stone-200 py-2.5 text-sm text-stone-600 transition hover:bg-stone-50"
+							class="flex-1 rounded-lg border border-stone-200 py-2.5 text-sm text-stone-600 transition duration-200 hover:bg-stone-50 active:scale-[0.98]"
 						>
 							Cancelar
 						</button>
 						<button
 							type="submit"
 							disabled={loading}
-							class="flex-1 rounded-lg bg-stone-800 py-2.5 text-sm font-medium text-white transition hover:bg-stone-700 disabled:opacity-50"
+							class="flex-1 rounded-lg bg-stone-800 py-2.5 text-sm font-medium text-white transition duration-200 hover:bg-stone-700 active:scale-[0.98] disabled:opacity-50"
 						>
 							{loading ? 'Aguarde...' : 'Confirmar'}
 						</button>
@@ -194,7 +194,7 @@
 							href={result.paymentValue}
 							target="_blank"
 							rel="noopener noreferrer"
-							class="w-full rounded-lg bg-stone-800 py-2.5 text-center text-sm font-medium text-white transition hover:bg-stone-700"
+							class="w-full rounded-lg bg-stone-800 py-2.5 text-center text-sm font-medium text-white transition duration-200 hover:bg-stone-700 active:scale-[0.98]"
 						>
 							Ir para o pagamento →
 						</a>
@@ -242,7 +242,7 @@
 
 					<button
 						onclick={onClose}
-						class="w-full rounded-lg border border-stone-200 py-2.5 text-sm text-stone-600 transition hover:bg-stone-50"
+						class="w-full rounded-lg border border-stone-200 py-2.5 text-sm text-stone-600 transition duration-200 hover:bg-stone-50 active:scale-[0.98]"
 					>
 						Fechar
 					</button>
@@ -265,13 +265,13 @@
 					<div class="flex w-full gap-3">
 						<button
 							onclick={onClose}
-							class="flex-1 rounded-lg border border-stone-200 py-2.5 text-sm text-stone-600"
+							class="flex-1 rounded-lg border border-stone-200 py-2.5 text-sm text-stone-600 transition duration-200 hover:bg-stone-50 active:scale-[0.98]"
 						>
 							Fechar
 						</button>
 						<button
 							onclick={() => (step = 'form')}
-							class="flex-1 rounded-lg bg-stone-800 py-2.5 text-sm font-medium text-white"
+							class="flex-1 rounded-lg bg-stone-800 py-2.5 text-sm font-medium text-white transition duration-200 hover:bg-stone-700 active:scale-[0.98]"
 						>
 							Tentar novamente
 						</button>

@@ -37,12 +37,12 @@
 	<!-- Content -->
 	<div class="relative z-10 flex flex-col items-center gap-4 px-6 text-center text-white">
 		{#if wedding.date}
-			<p class="text-xs font-medium tracking-[0.3em] uppercase opacity-80">
+			<p class="animate-hero-in text-xs font-medium tracking-[0.3em] uppercase opacity-80">
 				{hasPassed(wedding.date) ? 'CASARAM EM' : 'CASAMENTO EM'} &mdash; {formatDate(wedding.date)}
 			</p>
 		{/if}
 
-		<h1 class="font-serif text-6xl leading-tight font-light md:text-8xl">
+		<h1 class="animate-hero-in animate-delay-150 font-script text-7xl leading-tight md:text-9xl">
 			{coupleName(wedding.title)}
 		</h1>
 	</div>

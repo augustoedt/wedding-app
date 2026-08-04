@@ -12,7 +12,7 @@
 	<div class="mx-auto flex max-w-2xl flex-col items-center gap-6 px-6 text-center">
 		<button
 			onclick={shareWhatsApp}
-			class="flex items-center gap-2 rounded-full border border-stone-200 px-6 py-2.5 text-sm font-medium text-stone-600 transition hover:border-green-400 hover:text-green-600"
+			class="flex items-center gap-2 rounded-full border border-stone-200 px-6 py-2.5 text-sm font-medium text-stone-600 transition duration-200 hover:border-green-400 hover:text-green-600 active:scale-[0.97]"
 		>
 			<svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
 				<path

@@ -105,7 +105,9 @@
 			</div>
 		</div>
 
-		<div class="w-full max-w-sm rounded-2xl border border-stone-100 bg-white px-8 py-10 shadow-sm">
+		<div
+			class="w-full max-w-sm rounded-2xl bg-white px-8 py-10 shadow-sm ring-1 ring-stone-900/5"
+		>
 			{#if step === 'choice'}
 				<p class="mb-6 text-center text-sm leading-relaxed text-stone-500">
 					Faça parte da nossa história de amor.<br />Confirme sua presença abaixo.
@@ -138,7 +140,7 @@
 					<button
 						onclick={() => handleRsvp('confirmed')}
 						disabled={loading}
-						class="rounded-lg bg-stone-800 py-3.5 text-sm font-medium tracking-widest text-white uppercase transition hover:bg-stone-700 disabled:opacity-50"
+						class="rounded-lg bg-stone-800 py-3.5 text-sm font-medium tracking-widest text-white uppercase transition duration-200 hover:bg-stone-700 active:scale-[0.98] disabled:opacity-50"
 					>
 						{loading ? 'Enviando...' : 'Confirmar presença'}
 					</button>
@@ -146,7 +148,7 @@
 					<button
 						onclick={() => handleRsvp('declined')}
 						disabled={loading}
-						class="rounded-lg border border-stone-300 bg-white py-3.5 text-sm font-medium tracking-widest text-stone-600 uppercase transition hover:bg-stone-50 disabled:opacity-50"
+						class="rounded-lg border border-stone-300 bg-white py-3.5 text-sm font-medium tracking-widest text-stone-600 uppercase transition duration-200 hover:bg-stone-50 active:scale-[0.98] disabled:opacity-50"
 					>
 						{loading ? 'Enviando...' : 'Não poderei comparecer'}
 					</button>

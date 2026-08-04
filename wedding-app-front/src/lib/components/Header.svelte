@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { fade, fly } from 'svelte/transition';
+	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { getToken } from '$lib/rsvp-store';
 
@@ -59,14 +61,17 @@
 
 				{#if menuOpen}
 					<ul
-						class="absolute top-full left-0 mt-2 min-w-52 rounded-md bg-white py-1 shadow-lg"
+						transition:fly={{ y: -8, duration: 200 }}
+						class="absolute top-full left-0 mt-2 min-w-52 rounded-md bg-white py-1 shadow-lg ring-1 ring-stone-900/5"
 						onmouseleave={() => (menuOpen = false)}
 					>
 						{#each navItems as item (item.href)}
 							<li>
 								<a
 									href={item.href}
-									class="block px-5 py-2.5 text-sm text-stone-700 hover:bg-stone-50"
+									class="block px-5 py-2.5 text-sm transition-colors hover:bg-stone-50"
+									class:text-rose-500={page.url.pathname === item.href}
+									class:text-stone-700={page.url.pathname !== item.href}
 									onclick={() => (menuOpen = false)}
 								>
 									{item.label}
@@ -124,13 +129,18 @@
 
 	<!-- Mobile menu -->
 	{#if mobileOpen}
-		<div class="border-t border-stone-200 bg-white md:hidden">
+		<div
+			transition:fade={{ duration: 150 }}
+			class="border-t border-stone-200 bg-white md:hidden"
+		>
 			<ul class="px-6 py-2">
 				{#each navItems as item (item.href)}
 					<li>
 						<a
 							href={item.href}
-							class="block border-b border-stone-100 py-3 text-sm text-stone-700"
+							class="block border-b border-stone-100 py-3 text-sm transition-colors"
+							class:text-rose-500={page.url.pathname === item.href}
+							class:text-stone-700={page.url.pathname !== item.href}
 							onclick={() => (mobileOpen = false)}
 						>
 							{item.label}
