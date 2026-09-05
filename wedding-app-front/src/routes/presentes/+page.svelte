@@ -52,20 +52,22 @@
 </svelte:head>
 
 <WeddingLayout {wedding} dark>
-	<main class="flex-1 pt-20">
-		<div class="mx-auto max-w-6xl px-6 py-12">
-			<div class="mb-10 text-center">
-				<h1 class="font-serif text-4xl font-light text-stone-800">Lista de Presentes</h1>
-				<div class="mt-4 flex items-center justify-center gap-3">
+	<main class="flex-1 pt-24">
+		<div class="mx-auto max-w-6xl px-6 py-16 md:py-20">
+			<div class="mb-14 text-center">
+				<h1 class="font-serif text-4xl font-light text-stone-800 md:text-5xl">
+					Lista de Presentes
+				</h1>
+				<div class="mt-5 flex items-center justify-center gap-3">
 					<div class="h-px w-16 bg-stone-200"></div>
-					<svg class="h-4 w-4 text-rose-300" viewBox="0 0 24 24" fill="currentColor">
+					<svg class="h-4 w-4 text-blush-400" viewBox="0 0 24 24" fill="currentColor">
 						<path
 							d="M20 7h-1.26A4 4 0 0 0 15 4a4 4 0 0 0-3 1.35A4 4 0 0 0 9 4a4 4 0 0 0-3.74 3H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"
 						/>
 					</svg>
 					<div class="h-px w-16 bg-stone-200"></div>
 				</div>
-				<p class="mt-4 text-sm text-stone-500">
+				<p class="mx-auto mt-5 max-w-md text-[15px] leading-relaxed text-stone-500">
 					Sua presença é o nosso maior presente. Mas se quiser nos presentear, escolha abaixo.
 				</p>
 			</div>
@@ -92,21 +94,21 @@
 				</div>
 
 				{#if totalPages > 1}
-					<div class="mt-10 flex items-center justify-center gap-4">
+					<div class="mt-12 flex items-center justify-center gap-5">
 						<button
 							onclick={() => goToPage(currentPage - 1)}
 							disabled={navigating || currentPage <= 1}
-							class="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 transition duration-200 hover:bg-stone-50 active:scale-[0.97] disabled:opacity-40"
+							class="rounded-full border border-stone-200 px-6 py-2.5 text-sm font-medium text-stone-600 transition duration-300 ease-out-expo hover:border-stone-300 hover:bg-white hover:shadow-soft active:scale-[0.97] disabled:opacity-40"
 						>
 							Anterior
 						</button>
-						<span class="text-sm text-stone-500">
+						<span class="text-sm tabular-nums text-stone-400">
 							Página {currentPage} de {totalPages}
 						</span>
 						<button
 							onclick={() => goToPage(currentPage + 1)}
 							disabled={navigating || currentPage >= totalPages}
-							class="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 transition duration-200 hover:bg-stone-50 active:scale-[0.97] disabled:opacity-40"
+							class="rounded-full border border-stone-200 px-6 py-2.5 text-sm font-medium text-stone-600 transition duration-300 ease-out-expo hover:border-stone-300 hover:bg-white hover:shadow-soft active:scale-[0.97] disabled:opacity-40"
 						>
 							Próxima
 						</button>

@@ -28,7 +28,7 @@
 </script>
 
 <div
-	class="mx-auto flex max-h-80 w-full max-w-[20rem] flex-col overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-stone-900/5 transition duration-300 hover:-translate-y-1 hover:shadow-lg"
+	class="mx-auto flex max-h-80 w-full max-w-[20rem] flex-col overflow-hidden rounded-2xl bg-white shadow-soft transition duration-500 ease-out-expo hover:-translate-y-1 hover:shadow-lift"
 	class:grayscale={isBought}
 	class:opacity-60={isBought}
 	class:opacity-75={isLocked}
@@ -85,20 +85,22 @@
 		{#if gift.description}
 			<p class="line-clamp-2 text-xs text-stone-500">{gift.description}</p>
 		{/if}
-		<p class="mt-auto text-base font-semibold text-stone-700">{formatPrice(gift.price)}</p>
+		<p class="mt-auto font-serif text-lg font-medium tabular-nums text-stone-800">
+			{formatPrice(gift.price)}
+		</p>
 
 		{#if isBought}
-			<span class="rounded-lg bg-stone-100 py-2.5 text-center text-xs font-medium text-stone-400">
+			<span class="rounded-full bg-stone-100 py-2.5 text-center text-xs font-medium text-stone-400">
 				Já presenteado
 			</span>
 		{:else if isLocked}
-			<span class="rounded-lg bg-amber-50 py-2.5 text-center text-sm font-medium text-amber-600">
+			<span class="rounded-full bg-amber-50 py-2.5 text-center text-sm font-medium text-amber-600">
 				Reservado
 			</span>
 		{:else}
 			<button
 				onclick={() => onBuy(gift)}
-				class="rounded-lg bg-stone-800 py-2.5 text-sm font-medium text-white transition duration-200 hover:bg-stone-700 active:scale-[0.98]"
+				class="rounded-full bg-stone-800 py-2.5 text-sm font-medium text-white transition duration-300 ease-out-expo hover:bg-stone-700 hover:shadow-soft active:scale-[0.98]"
 			>
 				Comprar
 			</button>

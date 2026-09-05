@@ -15,7 +15,8 @@
 	} = $props();
 </script>
 
-<div class="flex min-h-screen flex-col font-sans">
+<div class="flex min-h-dvh flex-col font-sans">
+	<div class="grain" aria-hidden="true"></div>
 	<Header {dark} />
 	{@render children()}
 	<Footer title={wedding.title} />

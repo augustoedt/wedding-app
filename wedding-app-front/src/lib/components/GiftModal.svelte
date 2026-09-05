@@ -68,7 +68,7 @@
 
 <!-- Backdrop -->
 <div
-	class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+	class="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/50 p-4 backdrop-blur-sm"
 	role="dialog"
 	aria-modal="true"
 	aria-label="Comprar presente"
@@ -76,7 +76,7 @@
 	onclick={handleBackdrop}
 	onkeydown={(e) => e.key === 'Escape' && onClose()}
 >
-	<div class="w-full max-w-md rounded-2xl bg-white shadow-xl ring-1 ring-stone-900/5">
+	<div class="texture-paper w-full max-w-md rounded-3xl bg-white shadow-lift ring-1 ring-stone-900/5">
 		<!-- Header -->
 		<div class="flex items-start justify-between border-b border-stone-100 px-6 py-4">
 			<div>
@@ -151,14 +151,14 @@
 						<button
 							type="button"
 							onclick={onClose}
-							class="flex-1 rounded-lg border border-stone-200 py-2.5 text-sm text-stone-600 transition duration-200 hover:bg-stone-50 active:scale-[0.98]"
+							class="flex-1 rounded-full border border-stone-200 py-2.5 text-sm text-stone-600 transition duration-300 ease-out-expo hover:bg-cream-100 active:scale-[0.98]"
 						>
 							Cancelar
 						</button>
 						<button
 							type="submit"
 							disabled={loading}
-							class="flex-1 rounded-lg bg-stone-800 py-2.5 text-sm font-medium text-white transition duration-200 hover:bg-stone-700 active:scale-[0.98] disabled:opacity-50"
+							class="flex-1 rounded-full bg-stone-800 py-2.5 text-sm font-medium text-white transition duration-300 ease-out-expo hover:bg-stone-700 active:scale-[0.98] disabled:opacity-50"
 						>
 							{loading ? 'Aguarde...' : 'Confirmar'}
 						</button>
@@ -242,7 +242,7 @@
 
 					<button
 						onclick={onClose}
-						class="w-full rounded-lg border border-stone-200 py-2.5 text-sm text-stone-600 transition duration-200 hover:bg-stone-50 active:scale-[0.98]"
+						class="w-full rounded-full border border-stone-200 py-2.5 text-sm text-stone-600 transition duration-300 ease-out-expo hover:bg-cream-100 active:scale-[0.98]"
 					>
 						Fechar
 					</button>
@@ -265,13 +265,13 @@
 					<div class="flex w-full gap-3">
 						<button
 							onclick={onClose}
-							class="flex-1 rounded-lg border border-stone-200 py-2.5 text-sm text-stone-600 transition duration-200 hover:bg-stone-50 active:scale-[0.98]"
+							class="flex-1 rounded-full border border-stone-200 py-2.5 text-sm text-stone-600 transition duration-300 ease-out-expo hover:bg-cream-100 active:scale-[0.98]"
 						>
 							Fechar
 						</button>
 						<button
 							onclick={() => (step = 'form')}
-							class="flex-1 rounded-lg bg-stone-800 py-2.5 text-sm font-medium text-white transition duration-200 hover:bg-stone-700 active:scale-[0.98]"
+							class="flex-1 rounded-full bg-stone-800 py-2.5 text-sm font-medium text-white transition duration-300 ease-out-expo hover:bg-stone-700 active:scale-[0.98]"
 						>
 							Tentar novamente
 						</button>

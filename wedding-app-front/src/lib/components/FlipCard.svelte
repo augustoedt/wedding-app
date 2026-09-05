@@ -4,101 +4,38 @@
 	let display = $derived(String(value).padStart(2, '0'));
 </script>
 
-<div class="flex flex-col items-center gap-2">
+<div class="flex min-w-16 flex-col items-center gap-2 md:min-w-24">
 	{#key value}
-		<div class="flip-card">
-			<div class="card-top">
-				<span>{display}</span>
-			</div>
-			<div class="card-divider"></div>
-			<div class="card-bottom">
-				<span>{display}</span>
-			</div>
-		</div>
+		<span
+			class="tick font-serif text-5xl font-light tabular-nums text-stone-800 md:text-6xl"
+		>
+			{display}
+		</span>
 	{/key}
-	<span class="text-xs font-medium tracking-[0.2em] uppercase text-stone-500">{label}</span>
+	<span class="text-[10px] font-medium tracking-[0.3em] uppercase text-stone-400 md:text-[11px]">
+		{label}
+	</span>
 </div>
 
 <style>
-	.flip-card {
-		position: relative;
-		width: 72px;
-		height: 88px;
-		background: #1c1c1c;
-		border-radius: 8px;
-		box-shadow:
-			0 8px 20px rgba(28, 20, 20, 0.28),
-			0 1px 4px rgba(28, 20, 20, 0.2);
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		font-family: 'Montserrat', sans-serif;
-		font-size: 2.25rem;
-		font-weight: 700;
-		color: #ffffff;
-		perspective: 400px;
-		animation: flip-in 0.35s ease-out;
+	.tick {
+		animation: tick-in 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 	}
 
-	.card-top,
-	.card-bottom {
-		position: absolute;
-		left: 0;
-		right: 0;
-		height: 50%;
-		overflow: hidden;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.card-top {
-		top: 0;
-		border-radius: 8px 8px 0 0;
-		background: #1c1c1c;
-		align-items: flex-end;
-		padding-bottom: 2px;
-	}
-
-	.card-top span {
-		transform: translateY(55%);
-		display: block;
-		line-height: 1;
-	}
-
-	.card-bottom {
-		bottom: 0;
-		border-radius: 0 0 8px 8px;
-		background: #242424;
-		align-items: flex-start;
-		padding-top: 2px;
-	}
-
-	.card-bottom span {
-		transform: translateY(-55%);
-		display: block;
-		line-height: 1;
-	}
-
-	.card-divider {
-		position: absolute;
-		top: 50%;
-		left: 0;
-		right: 0;
-		height: 0px;
-		background: rgba(0, 0, 0, 0.6);
-		z-index: 1;
-	}
-
-	@keyframes flip-in {
-		0% {
-			transform: rotateX(90deg);
+	@keyframes tick-in {
+		from {
 			opacity: 0;
+			transform: translateY(10px);
 		}
-		100% {
-			transform: rotateX(0deg);
+		to {
 			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.tick {
+			animation: none;
 		}
 	}
 </style>
