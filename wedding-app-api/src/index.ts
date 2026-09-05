@@ -23,11 +23,14 @@ import { createPublicService } from "./modules/public/service"
 import { createWeddingsRoutes } from "./modules/weddings"
 import { createWeddingsService } from "./modules/weddings/service"
 
+// Prazo para o casal aprovar o pagamento antes de o presente voltar a ficar disponível.
+const PAYMENT_APPROVAL_DEADLINE_MS = 7 * 24 * 60 * 60 * 1000
+
 async function expireGiftLocks() {
   const giftsRepo = createGiftsRepository(db)
   const paymentsRepo = createPaymentsRepository(db)
 
-  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000)
+  const cutoff = new Date(Date.now() - PAYMENT_APPROVAL_DEADLINE_MS)
   const expired = await giftsRepo.findExpiredLocks(cutoff)
 
   if (expired.length === 0) return
