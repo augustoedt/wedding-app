@@ -106,7 +106,7 @@
 								<p class="font-medium text-slate-800">{p.buyerName}</p>
 								<p class="text-xs text-slate-400">{p.buyerEmail}</p>
 								{#if p.message}
-									<p class="mt-1 max-w-xs truncate text-xs text-slate-400 italic">"{p.message}"</p>
+									<p class="mt-1 max-w-xs text-xs text-slate-400 italic whitespace-pre-line break-words">"{p.message}"</p>
 								{/if}
 							</td>
 							<td class="px-4 py-3 font-medium text-slate-700">{formatPrice(p.amount)}</td>
