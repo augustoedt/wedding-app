@@ -20,7 +20,7 @@
     "@elysia/cron": "^1.4.2",
     "@elysiajs/cors": "latest",
     "@sinclair/typebox": "^0.34.49",
-    "better-auth": "latest",
+    "better-auth": "1.6.18",
     "drizzle-kit": "latest",
     "drizzle-orm": "latest",
     "elysia": "latest",
