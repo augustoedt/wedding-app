@@ -13,7 +13,29 @@
 		dark?: boolean;
 		children: Snippet;
 	} = $props();
+
+	const socialImage = $derived(wedding.ogImage ?? wedding.coverImage);
+	const socialDescription = $derived(
+		(wedding.description ?? wedding.title).replace(/\s+/g, ' ').trim().slice(0, 200)
+	);
 </script>
+
+<svelte:head>
+	<meta property="og:type" content="website" />
+	<meta property="og:site_name" content={wedding.title} />
+	<meta property="og:title" content={wedding.title} />
+	<meta property="og:description" content={socialDescription} />
+	<meta name="twitter:title" content={wedding.title} />
+	<meta name="twitter:description" content={socialDescription} />
+	{#if socialImage}
+		<meta property="og:image" content={socialImage} />
+		<meta property="og:image:secure_url" content={socialImage} />
+		<meta property="og:image:alt" content={`Convite de ${wedding.title}`} />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:image" content={socialImage} />
+		<meta name="twitter:image:alt" content={`Convite de ${wedding.title}`} />
+	{/if}
+</svelte:head>
 
 <div class="flex min-h-screen flex-col font-sans">
 	<Header {dark} />
