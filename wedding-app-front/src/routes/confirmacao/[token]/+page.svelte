@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { onMount, untrack } from 'svelte';
 	import { confirmRsvpByToken } from '$lib/wedding.remote';
 	import { saveToken } from '$lib/rsvp-store';
@@ -205,12 +206,21 @@
 					{/if}
 				</div>
 
-				<button
-					onclick={() => (step = 'choice')}
-					class="mt-6 block w-full text-center text-sm text-stone-500 underline hover:text-stone-700"
-				>
-					Alterar resposta
-				</button>
+				<div class="mt-7 flex w-full flex-col gap-3">
+					<a
+						href={resolve('/presentes')}
+						class="rounded-full bg-stone-800 px-5 py-3.5 text-center text-sm font-medium tracking-widest text-white uppercase transition duration-300 ease-out-expo hover:bg-stone-700 hover:shadow-soft active:scale-[0.98]"
+					>
+						Confira os presentes
+					</a>
+
+					<button
+						onclick={() => (step = 'choice')}
+						class="block w-full text-center text-sm text-stone-500 underline hover:text-stone-700"
+					>
+						Alterar resposta
+					</button>
+				</div>
 			{:else if step === 'error'}
 				<div class="flex flex-col items-center gap-4 py-2 text-center">
 					<div class="flex h-16 w-16 items-center justify-center rounded-full bg-red-50">
