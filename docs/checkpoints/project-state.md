@@ -31,17 +31,15 @@ Casamento publicado: slug `eduemay` (front usa `PUBLIC_WEDDING_SLUG`; conferir o
 
 ## Em andamento ⚠️
 
-- Merge de `layout-v2` → `main` e troca da branch do front no Railway para `main`.
 - `wedding-app-api/.env` modificado localmente — **não commitado**.
 - `.DS_Store` untracked — não versionar.
 
-Nada de feature de produto em WIP além do acima.
+Nada de feature de produto em WIP.
 
 ## Próximo passo
 
-1. Confirmar deploy do front a partir de `main` (`SUCCESS`).
-2. Corrigir `docs/contracts/api.md` (24h → 7 dias) quando for conveniente — issue aberta.
-3. Não subir Better Auth para 1.7 sem o plano `migrar-better-auth-1-7.md`.
+1. Corrigir `docs/contracts/api.md` (24h → 7 dias) quando for conveniente — issue aberta.
+2. Não subir Better Auth para 1.7 sem o plano `migrar-better-auth-1-7.md`.
 
 ## Armadilhas conhecidas
 
