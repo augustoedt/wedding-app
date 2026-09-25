@@ -1419,6 +1419,58 @@ describe("guest messages integration", () => {
     expect(rows).toHaveLength(0)
   })
 
+  it("confirmPayment accepts expired payments and republishes the gift as purchased", async () => {
+    if (!integrationDbAvailable) return
+
+    await seedUser("u-1")
+    await seedWedding({ id: "w-1", userId: "u-1", slug: "slug-expired" })
+    await seedGift({
+      id: "g-1",
+      weddingId: "w-1",
+      active: true,
+      lockedAt: null
+    })
+    await seedGiftPayment({
+      id: "p-1",
+      giftId: "g-1",
+      weddingId: "w-1",
+      status: "expired",
+      message: "Chegou depois do prazo"
+    })
+    await seedGiftPayment({
+      id: "p-2",
+      giftId: "g-1",
+      weddingId: "w-1",
+      status: "pending_confirmation"
+    })
+
+    const guard = createAuthenticatedGuard("u-1") as unknown as typeof authGuard
+    const app = new Elysia().use(
+      createPaymentsRoutes({ service: createPaymentsService(testDb), guard })
+    )
+
+    const res = await app.handle(
+      new Request("http://localhost/admin/payments/p-1/confirm", {
+        method: "PUT"
+      })
+    )
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.status).toBe("approved")
+    expect(body.message?.message).toBe("Chegou depois do prazo")
+    expect(body.message?.isVisible).toBe(true)
+
+    const [gift] = await testDb.select().from(gifts).where(eq(gifts.id, "g-1"))
+    expect(gift?.isActive).toBe(false)
+    expect(gift?.lockedAt).toBeNull()
+
+    const [other] = await testDb
+      .select()
+      .from(giftPayments)
+      .where(eq(giftPayments.id, "p-2"))
+    expect(other?.status).toBe("expired")
+  })
+
   it("messages service blocks setVisibility by non-owner", async () => {
     if (!integrationDbAvailable) return
 

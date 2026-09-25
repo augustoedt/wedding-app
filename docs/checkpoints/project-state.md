@@ -40,6 +40,8 @@ Nada de feature de produto em WIP.
 
 1. Não subir Better Auth para 1.7 sem o plano `migrar-better-auth-1-7.md`.
 
+Pagamento expirado pelo cron de 7 dias **pode ser confirmado depois**: o presente volta a comprado e o recado vira mensagem de mural (admin Pagamentos).
+
 ## Armadilhas conhecidas
 
 - **`better-auth: latest` quebra o login.** 1.7 exige `account.issuer`; o banco não tem a coluna. Sintoma: `Invalid email or password` + log `User not found`. ADR `004`.

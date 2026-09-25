@@ -29,7 +29,10 @@ export function createPaymentsRoutes({
         if ("error" in result) {
           if (result.error === "not_found") return status(404, { message: "Payment not found" })
           if (result.error === "forbidden") return status(403, { message: "Forbidden" })
-          if (result.error === "invalid_status") return status(409, { message: "Payment cannot be confirmed in its current status" })
+          if (result.error === "invalid_status")
+            return status(409, {
+              message: "Payment cannot be confirmed in its current status",
+            })
         }
         return (result as { data: unknown }).data
       },

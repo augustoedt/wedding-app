@@ -103,7 +103,7 @@ export function createGiftsRepository(database: Database) {
     async confirmPurchase(id: string) {
       await database
         .update(gifts)
-        .set({ lockedAt: null, updatedAt: new Date() })
+        .set({ isActive: false, lockedAt: null, updatedAt: new Date() })
         .where(eq(gifts.id, id))
     },
 

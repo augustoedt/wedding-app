@@ -35,13 +35,14 @@ export function createPaymentsService(database: Database) {
       const payment = await repo.findById(paymentId)
       if (!payment) return { error: "not_found" as const }
 
-      if (payment.status !== "pending_confirmation")
+      if (payment.status !== "pending_confirmation" && payment.status !== "expired")
         return { error: "invalid_status" as const }
 
       const wedding = await weddingsRepo.findById(payment.weddingId)
       if (!wedding || wedding.userId !== userId) return { error: "forbidden" as const }
 
       await repo.updateStatus(paymentId, "approved")
+      await repo.expirePendingByGiftIds([payment.giftId])
       await giftsRepo.confirmPurchase(payment.giftId)
 
       const createdMessage = payment.message

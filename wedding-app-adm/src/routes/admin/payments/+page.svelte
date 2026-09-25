@@ -69,7 +69,7 @@
 		<div class="flex items-center gap-2">
 			<select
 				bind:value={filterStatus}
-				class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-400"
+				class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:ring-2 focus:ring-rose-400 focus:outline-none"
 			>
 				<option value="">Todos</option>
 				<option value="pending_confirmation">Aguardando confirmação</option>
@@ -84,14 +84,18 @@
 	{:else if payments.error}
 		<div class="rounded-xl bg-red-50 p-4 text-red-600">Erro ao carregar pagamentos.</div>
 	{:else if !filtered.length}
-		<div class="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 py-16 text-center">
+		<div
+			class="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 py-16 text-center"
+		>
 			<p class="text-slate-500">Nenhum pagamento encontrado.</p>
 		</div>
 	{:else}
 		<div class="overflow-hidden rounded-xl bg-white shadow-sm">
 			<table class="w-full text-sm">
 				<thead>
-					<tr class="border-b border-slate-100 bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+					<tr
+						class="border-b border-slate-100 bg-slate-50 text-left text-xs font-medium tracking-wide text-slate-500 uppercase"
+					>
 						<th class="px-4 py-3">Comprador</th>
 						<th class="px-4 py-3">Valor</th>
 						<th class="px-4 py-3">Status</th>
@@ -106,7 +110,11 @@
 								<p class="font-medium text-slate-800">{p.buyerName}</p>
 								<p class="text-xs text-slate-400">{p.buyerEmail}</p>
 								{#if p.message}
-									<p class="mt-1 max-w-xs text-xs text-slate-400 italic whitespace-pre-line break-words">"{p.message}"</p>
+									<p
+										class="mt-1 max-w-xs text-xs break-words whitespace-pre-line text-slate-400 italic"
+									>
+										"{p.message}"
+									</p>
 								{/if}
 							</td>
 							<td class="px-4 py-3 font-medium text-slate-700">{formatPrice(p.amount)}</td>
@@ -117,7 +125,7 @@
 							</td>
 							<td class="px-4 py-3 text-slate-500">{formatDate(p.createdAt)}</td>
 							<td class="px-4 py-3 text-right">
-								{#if p.status === 'pending_confirmation'}
+								{#if p.status === 'pending_confirmation' || p.status === 'expired'}
 									<button
 										onclick={() => (pendingId = p.id)}
 										class="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-emerald-600"
@@ -146,8 +154,8 @@
 				Confirmar recebimento
 			</h2>
 			<p class="mb-6 text-sm text-slate-500">
-				Tem certeza que deseja confirmar o recebimento deste pagamento? Esta ação não pode ser
-				desfeita.
+				Confirma o recebimento deste pagamento? Vale também depois do prazo automático. O presente
+				passa a comprado e, se houver recado, ele poderá aparecer no mural.
 			</p>
 			<div class="flex justify-end gap-3">
 				<button

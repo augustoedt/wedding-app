@@ -24,7 +24,7 @@ via `src/lib/server/auth/index.ts`; sessão lida em `hooks.server.ts`.
 | `/admin/guests` | lista, RSVP, convite WhatsApp (`inviteMessage` + `{nome}` `{link}`), copiar link RSVP |
 | `/admin/guests/new` e `/admin/guests/[id]` | criar/editar convidado |
 | `/admin/gifts` | CRUD, status available/locked/purchased, drag-and-drop (`POST /admin/gifts/:id/reorder`) |
-| `/admin/payments` | pendentes → confirmar (`PUT /admin/payments/:id/confirm`) |
+| `/admin/payments` | pendentes **e expirados** → confirmar recebimento; recado vai ao mural |
 | `/admin/messages` | mural; visibilidade |
 | `/admin/media` | biblioteca de imagens (upload B2) |
 | `/admin/galleries` | galerias, fotos, reorder; apagar galeria **desanexa** imagens |

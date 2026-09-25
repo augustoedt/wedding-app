@@ -108,9 +108,11 @@ Todas as rotas abaixo usam o prefixo `/admin` e exigem sessão autenticada via `
 	- erros comuns:
 		- `404` — pagamento não encontrado
 		- `403` — pagamento pertence a outro casamento
-		- `409` — pagamento não está no status `pending_confirmation`
-	- efeito colateral: marca o presente como comprado definitivamente (`isActive = false, lockedAt = null`)
-	- efeito colateral: se o pagamento tiver um `message` (recado deixado pelo convidado ao travar o presente), cria um registro `GuestMessage` com `isVisible = true` e o retorna em `message`; se não houver `message`, retorna `message: null` e nenhum `GuestMessage` é criado
+		- `409` — pagamento já está `approved` (ou outro status que não seja `pending_confirmation` / `expired`)
+	- aceita `pending_confirmation` **e** `expired` (confirmação depois do prazo automático de 7 dias)
+	- efeito colateral: marca o presente como comprado (`isActive = false, lockedAt = null`)
+	- efeito colateral: outros pagamentos `pending_confirmation` do mesmo presente passam a `expired`
+	- efeito colateral: se o pagamento tiver um `message`, cria um `GuestMessage` com `isVisible = true` (mesmo em confirmação tardia) e o retorna em `message`; senão `message: null`
 
 ### Mensagens
 
@@ -256,6 +258,8 @@ Se o admin não confirmar em até 7 dias:
     → cron roda a cada hora (`PAYMENT_APPROVAL_DEADLINE_MS` em `src/index.ts`)
     → presentes com lockedAt < agora-7d são reativados (isActive=true, lockedAt=null)
     → pagamento associado fica com status=expired
+    → o admin ainda pode PUT /admin/payments/:id/confirm nesse expired
+      (presente volta a comprado; recado vira GuestMessage visível)
 ```
 
 ### Estados do presente
@@ -272,7 +276,7 @@ Se o admin não confirmar em até 7 dias:
 |-------------------------|------------------------------------------------------|
 | `pending_confirmation`  | Presente travado, aguardando admin confirmar          |
 | `approved`              | Admin confirmou o recebimento do pagamento           |
-| `expired`               | Cron expirou o lock após 7 dias sem confirmação      |
+| `expired`               | Cron expirou o lock após 7 dias; ainda pode confirmar |
 
 ---
 
