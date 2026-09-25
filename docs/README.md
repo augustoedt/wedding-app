@@ -58,9 +58,7 @@ Revisões de código e auditorias. Vazio por ora.
 
 ## issues/
 
-Problemas conhecidos em aberto que ainda não viraram plano.
-
-- [`app-logic-desatualizado.md`](issues/app-logic-desatualizado.md) — prazo de lock 24h no contrato vs 7 dias no código
+Problemas conhecidos em aberto que ainda não viraram plano. Vazio por ora.
 
 ## archive/
 
@@ -74,6 +72,7 @@ Documentos históricos ou de etapas concluídas, preservados para referência.
 - [`confirmacao.mhtml`](archive/confirmacao.mhtml) — dump da tela de confirmação
 - [`min-front-app.mhtml`](archive/min-front-app.mhtml) — dump do front
 - [`presentes.mhtml`](archive/presentes.mhtml) — dump da lista de presentes
+- [`app-logic-desatualizado.md`](archive/app-logic-desatualizado.md) — contrato falava 24h; corrigido
 
 ## benchmarks/
 

@@ -1,6 +1,6 @@
 # Checkpoint — estado do projeto wedding-app
 
-> **Atualizado em 2026-09-18.** Este é o checkpoint autoritativo: ao
+> **Atualizado em 2026-09-18 (contrato alinhado ao código).** Este é o checkpoint autoritativo: ao
 > retomar o trabalho (compactação de chat, troca de modelo), comece por
 > aqui.
 
@@ -25,7 +25,7 @@ Entregas recentes (2026-09-16 / 2026-09-17):
 - Login admin restaurado: Better Auth pinado em `1.6.18` + `BETTER_AUTH_SECRET` no Railway. Commits `35aa017` (`main`) / `76fa7dc` (`layout-v2`).
 - Botão **Confira os presentes** após RSVP (sem redirect automático). Commits `34690c7` (`main`) / `3e874dc` (`layout-v2`). Deployment front `75dfe396-55af-4687-adea-4d786975e017`.
 - Tags Open Graph publicando a imagem configurada. Commits `ed32dce` (`main`) / `8259698` (`layout-v2`). Deployment front `9f0209a6-37c9-47e1-9318-79990f5e08f9`.
-- Prazo de lock de presente: **7 dias** no código (`PAYMENT_APPROVAL_DEADLINE_MS` em `wedding-app-api/src/index.ts`). O contrato em `docs/contracts/api.md` ainda fala 24h — ver `docs/issues/app-logic-desatualizado.md`.
+- Prazo de lock de presente: **7 dias** no código e no contrato (`PAYMENT_APPROVAL_DEADLINE_MS` em `wedding-app-api/src/index.ts`).
 
 Casamento publicado: slug `eduemay` (front usa `PUBLIC_WEDDING_SLUG`; conferir o valor no serviço). Admin `eduardo@eduardo.com` (role `admin`). Imagens no Backblaze B2 (`softmediabox/wedding/eduemay/…`).
 
@@ -38,8 +38,7 @@ Nada de feature de produto em WIP.
 
 ## Próximo passo
 
-1. Corrigir `docs/contracts/api.md` (24h → 7 dias) quando for conveniente — issue aberta.
-2. Não subir Better Auth para 1.7 sem o plano `migrar-better-auth-1-7.md`.
+1. Não subir Better Auth para 1.7 sem o plano `migrar-better-auth-1-7.md`.
 
 ## Armadilhas conhecidas
 

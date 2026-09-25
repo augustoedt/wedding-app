@@ -90,6 +90,11 @@ Todas as rotas abaixo usam o prefixo `/admin` e exigem sessão autenticada via `
 	- params: `{ id: string }`
 	- retorno `204`: sem body
 	- erros comuns: `403`, `404`
+- `POST /admin/gifts/:id/reorder`
+	- params: `{ id: string }`
+	- body aceito: `{ beforeId?: string; afterId?: string }` (pelo menos um)
+	- retorno `200`: lista reordenada de `Gift[]`
+	- erros comuns: `403`, `404`, `422`
 
 ### Pagamentos
 
@@ -118,16 +123,51 @@ Todas as rotas abaixo usam o prefixo `/admin` e exigem sessão autenticada via `
 	- retorno `200`: `GuestMessage`
 	- erros comuns: `403`, `404`
 
+### Galerias
+
+- `GET /admin/galleries`
+	- retorno `200`: `Gallery[]`
+	- erro comum: `404 { message: "No wedding found" }`
+- `POST /admin/galleries`
+	- body aceito: `{ title: string }`
+	- retorno `201`: `Gallery`
+	- erro comum: `404 { message: "No wedding found" }`
+- `PUT /admin/galleries/:id`
+	- params: `{ id: string }`
+	- body aceito: `{ title?: string }`
+	- retorno `200`: `Gallery`
+	- erros comuns: `403`, `404`
+- `DELETE /admin/galleries/:id`
+	- params: `{ id: string }`
+	- retorno `204`: sem body
+	- erros comuns: `403`, `404`
+	- efeito: imagens da galeria ficam com `galleryId = null` (não são apagadas)
+- `POST /admin/galleries/:id/reorder`
+	- params: `{ id: string }`
+	- body aceito: `{ beforeId?: string; afterId?: string }` (pelo menos um)
+	- retorno `200`: lista reordenada
+	- erros comuns: `403`, `404`, `422`
+
 ### Imagens
 
 - `GET /admin/images`
 	- retorno `200`: `Image[]`
 	- erro comum: `404 { message: "No wedding found" }`
 - `POST /admin/images`
-	- body aceito (`multipart/form-data`): `{ file: File (image/jpeg | image/png | image/webp | image/gif, máx 8MB); description?: string }`
+	- body aceito (`multipart/form-data`): `{ file: File (image/jpeg | image/png | image/webp | image/gif, máx 8MB); description?: string; galleryId?: string }`
 	- retorno `201`: `Image`
-	- erro comum: `404 { message: "No wedding found" }`
+	- erros comuns: `404 { message: "No wedding found" }`, `403`
 	- efeito: faz upload do arquivo para o bucket Backblaze B2, em `wedding/{slug-do-casamento}/{uuid}.{ext}`, e cria o registro `Image` com a URL pública resultante
+- `PUT /admin/images/:id`
+	- params: `{ id: string }`
+	- body aceito: `{ description?: string | null; galleryId?: string | null }`
+	- retorno `200`: `Image`
+	- erros comuns: `403`, `404`
+- `POST /admin/images/:id/reorder`
+	- params: `{ id: string }`
+	- body aceito: `{ beforeId?: string; afterId?: string }` (pelo menos um)
+	- retorno `200`: lista reordenada
+	- erros comuns: `403`, `404`, `422`
 - `DELETE /admin/images/:id`
 	- params: `{ id: string }`
 	- retorno `204`: sem body
@@ -151,20 +191,22 @@ Essas rotas usam o prefixo `/public` e não exigem autenticação.
 
 - `GET /public/rsvp/:token`
 	- params: `{ token: string }` — UUID gerado na criação do convidado pelo admin
-	- retorno `200`: `{ name: string; rsvp: "pending" | "confirmed" | "declined" }`
+	- retorno `200`: `{ name: string; rsvp: "pending" | "confirmed" | "declined"; allowedCompanions: number; confirmedCompanions: number }`
 	- erro comum: `404 { message: "Invalid or expired RSVP link" }`
 - `POST /public/rsvp/:token`
 	- params: `{ token: string }` — UUID gerado na criação do convidado pelo admin
-	- body aceito: `{ rsvp: "confirmed" | "declined" }`
-	- retorno `200`: `Guest` atualizado
-	- erro comum: `404 { message: "Invalid or expired RSVP link" }`
+	- body aceito: `{ rsvp: "confirmed" | "declined"; companions?: number (>= 0) }`
+	- retorno `200`: `Guest` atualizado (`confirmedCompanions` gravado; recusar zera acompanhantes)
+	- erros comuns:
+		- `404 { message: "Invalid or expired RSVP link" }`
+		- `422` se `companions` > `plusOne` do convidado
 
 ### Lista de presentes
 
 - `GET /public/weddings/:slug/gifts`
 	- params: `{ slug: string }`
 	- query aceita: `{ page?: number (default 1); limit?: number (default 20, max 100) }`
-	- retorno `200`: `{ items: Gift[]; total: number; page: number; limit: number }` — todos os presentes do casamento, paginados
+	- retorno `200`: `{ items: Gift[]; total: number; page: number; limit: number }` — só presentes com `paymentType` definido, paginados
 	- erro comum: `404 { message: "Wedding not found" }`
 - `POST /public/weddings/:slug/gifts/:giftId/lock`
 	- params: `{ slug: string; giftId: string }`
@@ -177,6 +219,13 @@ Essas rotas usam o prefixo `/public` e não exigem autenticação.
 	- erros comuns:
 		- `404` — casamento não encontrado
 		- `409` — presente já travado ou comprado
+
+### Galerias (público)
+
+- `GET /public/weddings/:slug/galleries`
+	- params: `{ slug: string }`
+	- retorno `200`: galerias do casamento com imagens ordenadas
+	- erro comum: `404 { message: "Wedding not found" }`
 
 ### Mensagens
 
@@ -203,9 +252,9 @@ Admin vê o pagamento pendente em GET /admin/payments
     → se o pagamento tinha message, cria GuestMessage (isVisible=true) e retorna em message
     → admin pode ocultar/mostrar a mensagem no mural via PUT /admin/messages/:id/visibility
 
-Se o admin não confirmar em até 24h:
-    → cron roda a cada hora
-    → presentes com lockedAt < agora-24h são reativados (isActive=true, lockedAt=null)
+Se o admin não confirmar em até 7 dias:
+    → cron roda a cada hora (`PAYMENT_APPROVAL_DEADLINE_MS` em `src/index.ts`)
+    → presentes com lockedAt < agora-7d são reativados (isActive=true, lockedAt=null)
     → pagamento associado fica com status=expired
 ```
 
@@ -223,18 +272,19 @@ Se o admin não confirmar em até 24h:
 |-------------------------|------------------------------------------------------|
 | `pending_confirmation`  | Presente travado, aguardando admin confirmar          |
 | `approved`              | Admin confirmou o recebimento do pagamento           |
-| `expired`               | Cron expirou o lock após 24h sem confirmação         |
+| `expired`               | Cron expirou o lock após 7 dias sem confirmação      |
 
 ---
 
 ## Tipos de entidade
 
 - `Wedding`: `{ id, userId, title, slug, siteUrl, inviteMessage, date, description, coverImage, venueName, venueCep, venueAddress, venueNumber, venueNeighborhood, venueCity, venueState, venueTime, venueImage, dressCodeGuests, dressCodeGroomsmen, ogImage, isPublished, createdAt, updatedAt }` (campos de local, dress code e OG são `string | null`)
-- `Guest`: `{ id, weddingId, name, email, phone, rsvp, plusOne: number, inviteSent: boolean, rsvpToken, createdAt, updatedAt }`
-- `Gift`: `{ id, weddingId, name, description, price, imageUrl, paymentType, paymentValue, isActive, lockedAt, createdAt, updatedAt }`
+- `Guest`: `{ id, weddingId, name, email, phone, rsvp, plusOne: number, confirmedCompanions: number, inviteSent: boolean, rsvpToken, createdAt, updatedAt }`
+- `Gift`: `{ id, weddingId, name, description, price, imageUrl, paymentType, paymentValue, isActive, lockedAt, sortOrder, createdAt, updatedAt }`
 - `GiftPayment`: `{ id, giftId, weddingId, buyerName, buyerEmail, amount, status, message: string | null, createdAt, updatedAt }`
 - `GuestMessage`: `{ id, weddingId, paymentId, senderName, message, isVisible, createdAt, updatedAt }`
-- `Image`: `{ id, weddingId, url, description, createdAt }`
+- `Gallery`: `{ id, weddingId, title, sortOrder, createdAt, updatedAt }`
+- `Image`: `{ id, weddingId, galleryId: string | null, url, description, sortOrder, createdAt }`
 
 ## Pagamento nos presentes
 
