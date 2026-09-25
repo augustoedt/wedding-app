@@ -55,6 +55,7 @@ Nada de feature de produto em WIP.
 
 - [`../../README.md`](../../README.md) — visão do monorepo
 - [`../contracts/api.md`](../contracts/api.md) — contrato HTTP
+- [`../contracts/surfaces.md`](../contracts/surfaces.md) — telas admin/front
 - [`../decisions/`](../decisions/) — ADRs
 - [`../runbooks/`](../runbooks/) — debug/ops
 - [`../plans/migrar-better-auth-1-7.md`](../plans/migrar-better-auth-1-7.md)

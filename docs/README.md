@@ -14,6 +14,7 @@ Contrato HTTP da API (fonte única). Antes vivia em
 `wedding-app-api/app-logic.md` e era copiado para adm/front.
 
 - [`api.md`](contracts/api.md) — rotas `/admin`, `/public`, fluxos, tipos
+- [`surfaces.md`](contracts/surfaces.md) — telas do admin e do site público (não duplica a API)
 
 ## decisions/
 
