@@ -8,11 +8,11 @@
 	}
 </script>
 
-<footer class="border-t border-stone-100 bg-white py-10">
-	<div class="mx-auto flex max-w-2xl flex-col items-center gap-6 px-6 text-center">
+<footer class="texture-paper border-t border-stone-200/70 bg-white py-14">
+	<div class="mx-auto flex max-w-2xl flex-col items-center gap-7 px-6 text-center">
 		<button
 			onclick={shareWhatsApp}
-			class="flex items-center gap-2 rounded-full border border-stone-200 px-6 py-2.5 text-sm font-medium text-stone-600 transition hover:border-green-400 hover:text-green-600"
+			class="flex items-center gap-2.5 rounded-full border border-stone-200 px-6 py-2.5 text-sm font-medium text-stone-600 transition duration-300 ease-out-expo hover:border-green-500/50 hover:text-green-700 hover:shadow-soft active:scale-[0.97]"
 		>
 			<svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
 				<path
@@ -25,6 +25,6 @@
 			Compartilhar no WhatsApp
 		</button>
 
-		<p class="text-xs text-stone-300">{title}</p>
+		<p class="font-serif text-sm font-light tracking-wide text-stone-400 italic">{title}</p>
 	</div>
 </footer>

@@ -70,10 +70,10 @@
 </svelte:head>
 
 <WeddingLayout {wedding} dark>
-	<main class="flex flex-1 flex-col items-center justify-center bg-stone-50 px-6 py-20">
+	<main class="flex flex-1 flex-col items-center justify-center px-6 py-24">
 		<div class="mb-8 flex flex-col items-center gap-3">
 			<svg
-				class="h-14 w-14 text-rose-300"
+				class="h-14 w-14 text-blush-400"
 				viewBox="0 0 800 700"
 				xmlns="http://www.w3.org/2000/svg"
 				fill="currentColor"
@@ -106,7 +106,7 @@
 			</div>
 		</div>
 
-		<div class="w-full max-w-sm rounded-2xl border border-stone-100 bg-white px-8 py-10 shadow-sm">
+		<div class="texture-paper w-full max-w-sm rounded-3xl bg-white px-8 py-10 shadow-soft">
 			{#if step === 'choice'}
 				<p class="mb-6 text-center text-sm leading-relaxed text-stone-500">
 					Faça parte da nossa história de amor.<br />Confirme sua presença abaixo.
@@ -139,7 +139,7 @@
 					<button
 						onclick={() => handleRsvp('confirmed')}
 						disabled={loading}
-						class="rounded-lg bg-stone-800 py-3.5 text-sm font-medium tracking-widest text-white uppercase transition hover:bg-stone-700 disabled:opacity-50"
+						class="rounded-full bg-stone-800 py-3.5 text-sm font-medium tracking-widest text-white uppercase transition duration-300 ease-out-expo hover:bg-stone-700 hover:shadow-soft active:scale-[0.98] disabled:opacity-50"
 					>
 						{loading ? 'Enviando...' : 'Confirmar presença'}
 					</button>
@@ -147,7 +147,7 @@
 					<button
 						onclick={() => handleRsvp('declined')}
 						disabled={loading}
-						class="rounded-lg border border-stone-300 bg-white py-3.5 text-sm font-medium tracking-widest text-stone-600 uppercase transition hover:bg-stone-50 disabled:opacity-50"
+						class="rounded-full border border-stone-200 bg-white py-3.5 text-sm font-medium tracking-widest text-stone-600 uppercase transition duration-300 ease-out-expo hover:bg-cream-100 active:scale-[0.98] disabled:opacity-50"
 					>
 						{loading ? 'Enviando...' : 'Não poderei comparecer'}
 					</button>

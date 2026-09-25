@@ -1,5 +1,6 @@
 <script lang="ts">
 	import FlipCard from './FlipCard.svelte';
+	import { reveal } from '$lib/actions/reveal';
 	import { parseDateOnly } from '$lib/utils/date';
 
 	let { date }: { date: string } = $props();
@@ -30,16 +31,19 @@
 	});
 </script>
 
-<section class="bg-white py-14">
-	<div class="mx-auto max-w-2xl px-6 text-center">
-		<h2 class="mb-8 text-sm font-medium tracking-[0.3em] uppercase text-stone-500">
+<section class="py-24 md:py-32">
+	<div class="mx-auto max-w-3xl px-6 text-center" use:reveal data-reveal>
+		<h2 class="mb-12 text-[11px] font-medium tracking-[0.35em] text-stone-400 uppercase">
 			{isPast ? 'Já se passaram' : 'Faltam'}
 		</h2>
 
-		<div class="flex items-start justify-center gap-4 md:gap-8">
+		<div class="flex items-start justify-center gap-5 md:gap-12">
 			<FlipCard value={days} label="dias" />
+			<div class="h-16 w-px self-start bg-stone-200 md:h-20"></div>
 			<FlipCard value={hours} label="horas" />
+			<div class="h-16 w-px self-start bg-stone-200 md:h-20"></div>
 			<FlipCard value={minutes} label="minutos" />
+			<div class="h-16 w-px self-start bg-stone-200 md:h-20"></div>
 			<FlipCard value={seconds} label="segundos" />
 		</div>
 	</div>
